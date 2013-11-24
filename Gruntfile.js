@@ -11,7 +11,7 @@ module.exports = function(grunt) {
             ]
         };
 
-    // all the lang files need to be added manually
+    // all the locale files need to be added manually
     fs.readdirSync('./locales').forEach(function (path) {
         var file = path.slice(0, -3),
             destination = 'min/locales/' + file + '.min.js',

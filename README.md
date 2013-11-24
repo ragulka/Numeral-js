@@ -31,13 +31,13 @@ Please submit all pull requests to the `develop` branch.
 7. Submit a pull request to the `develop` branch.
 
 
-### Languages 
+### Locales 
 
-When naming language files use the [ISO 639-1 language codes](http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) supplemented by [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country codes when necessary.
+When naming locale files use the [ISO 639-1 language codes](http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) supplemented by [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country codes when necessary.
 
-### Language translations will not be merged without unit tests.
+### Locale translations will not be merged without unit tests.
 
-See [the english unit tests](https://github.com/adamwdraper/Numeral-js/blob/master/tests/languages/en-gb.js) for an example.
+See [the english unit tests](https://github.com/adamwdraper/Numeral-js/blob/master/tests/locales/en-gb.js) for an example.
 
 
 # Changelog
@@ -48,7 +48,7 @@ Bug fix: Unformat should pass through if given a number
 
 Added a mechanism to control rounding behaviour
 
-Added languageData() for getting and setting language props at runtime
+Added localeData() for getting and setting locale props at runtime
 
 ### 1.5.1
 
@@ -60,7 +60,7 @@ Add defaultFormat(). numeral().format() uses the default to format if no string 
 
 .unformat() returns 0 when passed no string
 
-Added languages.js that contains all languages
+Added locales.js that contains all locales
 
 Bug fix: Fix bug while unformatting ordinals
 
@@ -74,7 +74,7 @@ Bug fix: Fix bug while unformatting ordinals
 
 ### 1.4.8
 
-Bug fix: Throw error if language is not defined
+Bug fix: Throw error if locale is not defined
 
 ### 1.4.7
 
@@ -90,7 +90,7 @@ Add zeroFormat() function that accepts a string for custom formating of zeros
 
 Add valueOf() function
 
-Chain functionality to language function
+Chain functionality to locale function
 
 Make all minified files have the same .min.js filename ending
 
@@ -122,7 +122,7 @@ Bug fix: Minor fix to unformatting parser
 
 Add support for spaces before/after $, a, o, b in a format string
 
-Bug fix: Fix unformat for languages that use '.' in ordinals
+Bug fix: Fix unformat for locales that use '.' in ordinals
 
 Bug fix: Fix round up floating numbers with no precision correctly.
 
@@ -142,11 +142,11 @@ Add support for humanized filesizes
 
 ### 1.2.3
 
-Bug Fix: Fix unformatting for languages that use '.' as thousands delimiter
+Bug Fix: Fix unformatting for locales that use '.' as thousands delimiter
 
 ### 1.2.2
 
-Changed language definition property 'money' to 'currency'
+Changed locale definition property 'money' to 'currency'
 
 ### 1.2.1
 
@@ -154,9 +154,9 @@ Bug fix: Fix unformatting non-negative abbreviations
 
 ### 1.2.0
 
-Add language support
+Add locale support
 
-Update testing for to include languages
+Update testing for to include locales
 
 ### 1.1.0
 

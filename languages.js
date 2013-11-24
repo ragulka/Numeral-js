@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : belgium-dutch (be-nl)
+ * numeral.js locale configuration
+ * locale : belgium-dutch (be-nl)
  * author : Dieter Luypaert : https://github.com/moeriki
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal  : ','
@@ -26,20 +26,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('be-nl', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('be-nl', locale);
     }
 }());
 /*!
- * numeral.js language configuration
- * language : czech (cs)
+ * numeral.js locale configuration
+ * locale : czech (cs)
  * author : Anatoli Papirovski : https://github.com/apapirovski
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -60,21 +60,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('cs', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('cs', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : danish denmark (dk)
+ * numeral.js locale configuration
+ * locale : danish denmark (dk)
  * author : Michael Storgaard : https://github.com/mstorgaard
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -95,20 +95,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('da-dk', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('da-dk', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : German in Switzerland (de-ch)
+ * numeral.js locale configuration
+ * locale : German in Switzerland (de-ch)
  * author : Michael Piefel : https://github.com/piefel (based on work from Marco Krage : https://github.com/sinky)
  */ 
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -129,20 +129,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('de-ch', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('de-ch', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : German (de) – generally useful in Germany, Austria, Luxembourg, Belgium
+ * numeral.js locale configuration
+ * locale : German (de) – generally useful in Germany, Austria, Luxembourg, Belgium
  * author : Marco Krage : https://github.com/sinky
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -163,20 +163,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('de', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('de', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : english united kingdom (uk)
+ * numeral.js locale configuration
+ * locale : english united kingdom (uk)
  * author : Dan Ristic : https://github.com/dristic
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -201,20 +201,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('en-gb', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('en-gb', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : spanish Spain
+ * numeral.js locale configuration
+ * locale : spanish Spain
  * author : Hernan Garcia : https://github.com/hgarcia
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -240,21 +240,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('es', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('es', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : spanish
+ * numeral.js locale configuration
+ * locale : spanish
  * author : Hernan Garcia : https://github.com/hgarcia
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -280,21 +280,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('es', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('es', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : Finnish
+ * numeral.js locale configuration
+ * locale : Finnish
  * author : Sami Saada : https://github.com/samitheberber
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -315,21 +315,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('fi', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fi', locale);
     }
 }());
 
 /*!
- * numeral.js language configuration
- * language : french (Canada) (fr-CA)
+ * numeral.js locale configuration
+ * locale : french (Canada) (fr-CA)
  * author : Léo Renaud-Allaire : https://github.com/renaudleo
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -350,20 +350,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('fr-CA', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fr-CA', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : french (fr-ch)
+ * numeral.js locale configuration
+ * locale : french (fr-ch)
  * author : Adam Draper : https://github.com/adamwdraper
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '\'',
             decimal: '.'
@@ -384,21 +384,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('fr-ch', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fr-ch', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : french (fr)
+ * numeral.js locale configuration
+ * locale : french (fr)
  * author : Adam Draper : https://github.com/adamwdraper
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -419,20 +419,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('fr', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fr', locale);
     }
 }());
 /*!
- * numeral.js language configuration
- * language : Hungarian (hu)
+ * numeral.js locale configuration
+ * locale : Hungarian (hu)
  * author : Peter Bakondy : https://github.com/pbakondy
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -453,20 +453,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('hu', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('hu', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : italian Italy (it)
+ * numeral.js locale configuration
+ * locale : italian Italy (it)
  * author : Giacomo Trombi : http://cinquepunti.it
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -487,20 +487,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('it', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('it', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : japanese
+ * numeral.js locale configuration
+ * locale : japanese
  * author : teppeis : https://github.com/teppeis
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -521,21 +521,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('ja', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('ja', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : netherlands-dutch (nl-nl)
+ * numeral.js locale configuration
+ * locale : netherlands-dutch (nl-nl)
  * author : Dave Clayton : https://github.com/davedx
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal  : ','
@@ -557,20 +557,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('nl-nl', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('nl-nl', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : polish (pl)
+ * numeral.js locale configuration
+ * locale : polish (pl)
  * author : Dominik Bulaj : https://github.com/dominikbulaj
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -591,20 +591,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('pl', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('pl', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : portuguese brazil (pt-br)
+ * numeral.js locale configuration
+ * locale : portuguese brazil (pt-br)
  * author : Ramiro Varandas Jr : https://github.com/ramirovjr
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -625,20 +625,20 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('pt-br', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('pt-br', locale);
     }
 }());
 /*! 
- * numeral.js language configuration
- * language : portuguese (pt-pt)
+ * numeral.js locale configuration
+ * locale : portuguese (pt-pt)
  * author : Diogo Resende : https://github.com/dresende
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -659,19 +659,19 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('pt-pt', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('pt-pt', locale);
     }
 }());
 
-// numeral.js language configuration
-// language : Russian for the Ukraine (ru-UA)
+// numeral.js locale configuration
+// locale : Russian for the Ukraine (ru-UA)
 // author : Anatoli Papirovski : https://github.com/apapirovski
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -695,21 +695,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('ru-UA', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('ru-UA', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : russian (ru)
+ * numeral.js locale configuration
+ * locale : russian (ru)
  * author : Anatoli Papirovski : https://github.com/apapirovski
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -733,21 +733,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('ru', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('ru', locale);
     }
 }());
 
 /*!
- * numeral.js language configuration
- * language : slovak (sk)
+ * numeral.js locale configuration
+ * locale : slovak (sk)
  * author : Ahmed Al Hafoudh : http://www.freevision.sk
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -768,21 +768,21 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('sk', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('sk', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : thai (th)
+ * numeral.js locale configuration
+ * locale : thai (th)
  * author : Sathit Jittanupat : https://github.com/jojosati
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -803,17 +803,17 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('th', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('th', locale);
     }
 }());
 
 /*! 
- * numeral.js language configuration
- * language : turkish (tr)
+ * numeral.js locale configuration
+ * locale : turkish (tr)
  * author : Ecmel Ercan : https://github.com/ecmel, Erhan Gundogan : https://github.com/erhangundogan, Burak Yiğit Kaya: https://github.com/BYK
  */
 (function () {
@@ -842,7 +842,7 @@
             60: '\'ıncı',
             90: '\'ıncı'
         },
-        language = {
+        locale = {
             delimiters: {
                 thousands: '.',
                 decimal: ','
@@ -871,19 +871,19 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('tr', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('tr', locale);
     }
 }());
 
-// numeral.js language configuration
-// language : Ukrainian for the Ukraine (uk-UA)
+// numeral.js locale configuration
+// locale : Ukrainian for the Ukraine (uk-UA)
 // author : Michael Piefel : https://github.com/piefel (with help from Tetyana Kuzmenko)
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -907,10 +907,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('uk-UA', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('uk-UA', locale);
     }
 }());

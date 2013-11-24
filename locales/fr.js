@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : German (de) – generally useful in Germany, Austria, Luxembourg, Belgium
- * author : Marco Krage : https://github.com/sinky
+ * numeral.js locale configuration
+ * locale : french (fr)
+ * author : Adam Draper : https://github.com/adamwdraper
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -15,8 +15,8 @@
             billion: 'b',
             trillion: 't'
         },
-        ordinal: function (number) {
-            return '.';
+        ordinal : function (number) {
+            return number === 1 ? 'er' : 'e';
         },
         currency: {
             symbol: '€'
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('de', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fr', locale);
     }
 }());

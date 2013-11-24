@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : polish (pl)
+ * numeral.js locale configuration
+ * locale : polish (pl)
  * author : Dominik Bulaj : https://github.com/dominikbulaj
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('pl', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('pl', locale);
     }
 }());

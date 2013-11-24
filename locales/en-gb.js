@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : english united kingdom (uk)
+ * numeral.js locale configuration
+ * locale : english united kingdom (uk)
  * author : Dan Ristic : https://github.com/dristic
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -29,10 +29,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('en-gb', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('en-gb', locale);
     }
 }());

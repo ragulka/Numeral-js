@@ -1,10 +1,10 @@
 /*!
- * numeral.js language configuration
- * language : french (Canada) (fr-CA)
+ * numeral.js locale configuration
+ * locale : french (Canada) (fr-CA)
  * author : Léo Renaud-Allaire : https://github.com/renaudleo
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('fr-CA', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('fr-CA', locale);
     }
 }());

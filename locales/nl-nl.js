@@ -1,19 +1,19 @@
 /*! 
- * numeral.js language configuration
- * language : belgium-dutch (be-nl)
- * author : Dieter Luypaert : https://github.com/moeriki
+ * numeral.js locale configuration
+ * locale : netherlands-dutch (nl-nl)
+ * author : Dave Clayton : https://github.com/davedx
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
-            thousands: ' ',
+            thousands: '.',
             decimal  : ','
         },
         abbreviations: {
             thousand : 'k',
-            million  : ' mln',
-            billion  : ' mld',
-            trillion : ' bln'
+            million  : 'mln',
+            billion  : 'mrd',
+            trillion : 'bln'
         },
         ordinal : function (number) {
             var remainder = number % 100;
@@ -26,10 +26,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('be-nl', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('nl-nl', locale);
     }
 }());

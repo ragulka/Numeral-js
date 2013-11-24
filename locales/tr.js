@@ -1,6 +1,6 @@
 /*! 
- * numeral.js language configuration
- * language : turkish (tr)
+ * numeral.js locale configuration
+ * locale : turkish (tr)
  * author : Ecmel Ercan : https://github.com/ecmel, Erhan Gundogan : https://github.com/erhangundogan, Burak Yiğit Kaya: https://github.com/BYK
  */
 (function () {
@@ -29,7 +29,7 @@
             60: '\'ıncı',
             90: '\'ıncı'
         },
-        language = {
+        locale = {
             delimiters: {
                 thousands: '.',
                 decimal: ','
@@ -58,10 +58,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('tr', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('tr', locale);
     }
 }());

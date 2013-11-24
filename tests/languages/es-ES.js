@@ -1,16 +1,16 @@
 var numeral = require('../../numeral'),
-    language = require('../../languages/es-ES');
+    locale = require('../../locales/es-ES');
 
-numeral.language('es-ES', language);
+numeral.locale('es-ES', locale);
 
-exports['language:es-ES'] = {
+exports['locale:es-ES'] = {
     setUp: function (callback) {
-        numeral.language('es-ES');
+        numeral.locale('es-ES');
         callback();
     },
 
     tearDown: function (callback) {
-        numeral.language('en');
+        numeral.locale('en');
         callback();
     },
 

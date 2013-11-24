@@ -14,9 +14,9 @@
 
     var numeral,
         VERSION = '1.5.2',
-        // internal storage for language config files
-        languages = {},
-        currentLanguage = 'en',
+        // internal storage for locale config files
+        locales = {},
+        currentLocale = 'en',
         zeroFormat = null,
         defaultFormat = '0,0',
         // check for nodeJS
@@ -96,15 +96,15 @@
             if (string === zeroFormat) {
                 n._value = 0;
             } else {
-                if (languages[currentLanguage].delimiters.decimal !== '.') {
-                    string = string.replace(/\./g,'').replace(languages[currentLanguage].delimiters.decimal, '.');
+                if (locales[currentLocale].delimiters.decimal !== '.') {
+                    string = string.replace(/\./g,'').replace(locales[currentLocale].delimiters.decimal, '.');
                 }
 
                 // see if abbreviations are there so that we can multiply to the correct number
-                thousandRegExp = new RegExp('[^a-zA-Z]' + languages[currentLanguage].abbreviations.thousand + '(?:\\)|(\\' + languages[currentLanguage].currency.symbol + ')?(?:\\))?)?$');
-                millionRegExp = new RegExp('[^a-zA-Z]' + languages[currentLanguage].abbreviations.million + '(?:\\)|(\\' + languages[currentLanguage].currency.symbol + ')?(?:\\))?)?$');
-                billionRegExp = new RegExp('[^a-zA-Z]' + languages[currentLanguage].abbreviations.billion + '(?:\\)|(\\' + languages[currentLanguage].currency.symbol + ')?(?:\\))?)?$');
-                trillionRegExp = new RegExp('[^a-zA-Z]' + languages[currentLanguage].abbreviations.trillion + '(?:\\)|(\\' + languages[currentLanguage].currency.symbol + ')?(?:\\))?)?$');
+                thousandRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.thousand + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                millionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.million + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                billionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.billion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                trillionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.trillion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
 
                 // see if bytes are there so that we can multiply to the correct number
                 for (power = 0; power <= suffixes.length; power++) {
@@ -148,18 +148,18 @@
         if (prependSymbol) {
             if (output.indexOf('(') > -1 || output.indexOf('-') > -1) {
                 output = output.split('');
-                output.splice(1, 0, languages[currentLanguage].currency.symbol + space);
+                output.splice(1, 0, locales[currentLocale].currency.symbol + space);
                 output = output.join('');
             } else {
-                output = languages[currentLanguage].currency.symbol + space + output;
+                output = locales[currentLocale].currency.symbol + space + output;
             }
         } else {
             if (output.indexOf(')') > -1) {
                 output = output.split('');
-                output.splice(-1, 0, space + languages[currentLanguage].currency.symbol);
+                output.splice(-1, 0, space + locales[currentLocale].currency.symbol);
                 output = output.join('');
             } else {
-                output = output + space + languages[currentLanguage].currency.symbol;
+                output = output + space + locales[currentLocale].currency.symbol;
             }
         }
 
@@ -263,19 +263,19 @@
 
                 if (abs >= Math.pow(10, 12)) {
                     // trillion
-                    abbr = abbr + languages[currentLanguage].abbreviations.trillion;
+                    abbr = abbr + locales[currentLocale].abbreviations.trillion;
                     value = value / Math.pow(10, 12);
                 } else if (abs < Math.pow(10, 12) && abs >= Math.pow(10, 9)) {
                     // billion
-                    abbr = abbr + languages[currentLanguage].abbreviations.billion;
+                    abbr = abbr + locales[currentLocale].abbreviations.billion;
                     value = value / Math.pow(10, 9);
                 } else if (abs < Math.pow(10, 9) && abs >= Math.pow(10, 6)) {
                     // million
-                    abbr = abbr + languages[currentLanguage].abbreviations.million;
+                    abbr = abbr + locales[currentLocale].abbreviations.million;
                     value = value / Math.pow(10, 6);
                 } else if (abs < Math.pow(10, 6) && abs >= Math.pow(10, 3)) {
                     // thousand
-                    abbr = abbr + languages[currentLanguage].abbreviations.thousand;
+                    abbr = abbr + locales[currentLocale].abbreviations.thousand;
                     value = value / Math.pow(10, 3);
                 }
             }
@@ -314,7 +314,7 @@
                     format = format.replace('o', '');
                 }
 
-                ord = ord + languages[currentLanguage].ordinal(value);
+                ord = ord + locales[currentLocale].ordinal(value);
             }
 
             if (format.indexOf('[.]') > -1) {
@@ -338,7 +338,7 @@
                 w = d.split('.')[0];
 
                 if (d.split('.')[1].length) {
-                    d = languages[currentLanguage].delimiters.decimal + d.split('.')[1];
+                    d = locales[currentLocale].delimiters.decimal + d.split('.')[1];
                 } else {
                     d = '';
                 }
@@ -357,7 +357,7 @@
             }
 
             if (thousands > -1) {
-                w = w.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + languages[currentLanguage].delimiters.thousands);
+                w = w.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + locales[currentLocale].delimiters.thousands);
             }
 
             if (format.indexOf('.') === 0) {
@@ -392,44 +392,44 @@
         return obj instanceof Numeral;
     };
 
-    // This function will load languages and then set the global language.  If
+    // This function will load locales and then set the global locale.  If
     // no arguments are passed in, it will simply return the current global
-    // language key.
-    numeral.language = function (key, values) {
+    // locale key.
+    numeral.locale = function (key, values) {
         if (!key) {
-            return currentLanguage;
+            return currentLocale;
         }
 
         if (key && !values) {
-            if(!languages[key]) {
-                throw new Error('Unknown language : ' + key);
+            if(!locales[key]) {
+                throw new Error('Unknown locale : ' + key);
             }
-            currentLanguage = key;
+            currentLocale = key;
         }
 
-        if (values || !languages[key]) {
-            loadLanguage(key, values);
+        if (values || !locales[key]) {
+            loadLocale(key, values);
         }
 
         return numeral;
     };
     
-    // This function provides access to the loaded language data.  If
+    // This function provides access to the loaded locale data.  If
     // no arguments are passed in, it will simply return the current
-    // global language object.
-    numeral.languageData = function (key) {
+    // global locale object.
+    numeral.localeData = function (key) {
         if (!key) {
-            return languages[currentLanguage];
+            return locales[currentLocale];
         }
         
-        if (!languages[key]) {
-            throw new Error('Unknown language : ' + key);
+        if (!locales[key]) {
+            throw new Error('Unknown locale : ' + key);
         }
         
-        return languages[key];
+        return locales[key];
     };
 
-    numeral.language('en', {
+    numeral.locale('en', {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -464,8 +464,8 @@
         Helpers
     ************************************/
 
-    function loadLanguage(key, values) {
-        languages[key] = values;
+    function loadLocale(key, values) {
+        locales[key] = values;
     }
 
     /************************************

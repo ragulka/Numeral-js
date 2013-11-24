@@ -1,10 +1,10 @@
 /*!
- * numeral.js language configuration
- * language : slovak (sk)
+ * numeral.js locale configuration
+ * locale : slovak (sk)
  * author : Ahmed Al Hafoudh : http://www.freevision.sk
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('sk', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('sk', locale);
     }
 }());

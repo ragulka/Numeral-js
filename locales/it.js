@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : italian Italy (it)
+ * numeral.js locale configuration
+ * locale : italian Italy (it)
  * author : Giacomo Trombi : http://cinquepunti.it
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: '.',
             decimal: ','
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('it', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('it', locale);
     }
 }());

@@ -1,10 +1,8 @@
-/*! 
- * numeral.js language configuration
- * language : russian (ru)
- * author : Anatoli Papirovski : https://github.com/apapirovski
- */
+// numeral.js locale configuration
+// locale : Russian for the Ukraine (ru-UA)
+// author : Anatoli Papirovski : https://github.com/apapirovski
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -22,16 +20,16 @@
             return '.'; 
         },
         currency: {
-            symbol: 'руб.'
+            symbol: '\u20B4'
         }
     };
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('ru', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('ru-UA', locale);
     }
 }());

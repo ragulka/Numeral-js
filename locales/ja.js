@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : japanese
+ * numeral.js locale configuration
+ * locale : japanese
  * author : teppeis : https://github.com/teppeis
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('ja', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('ja', locale);
     }
 }());

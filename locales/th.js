@@ -1,10 +1,10 @@
 /*! 
- * numeral.js language configuration
- * language : thai (th)
+ * numeral.js locale configuration
+ * locale : thai (th)
  * author : Sathit Jittanupat : https://github.com/jojosati
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ',',
             decimal: '.'
@@ -25,10 +25,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('th', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('th', locale);
     }
 }());

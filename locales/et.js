@@ -1,13 +1,13 @@
 /*! 
- * numeral.js language configuration
- * language : Estonian
+ * numeral.js locale configuration
+ * locale : Estonian
  * author : Illimar Tambek : https://github.com/ragulka
  *
  * Note: in Estonian, abbreviations are always separated
  * from numbers with a space
  */
 (function () {
-    var language = {
+    var locale = {
         delimiters: {
             thousands: ' ',
             decimal: ','
@@ -28,10 +28,10 @@
 
     // Node
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = language;
+        module.exports = locale;
     }
     // Browser
-    if (typeof window !== 'undefined' && this.numeral && this.numeral.language) {
-        this.numeral.language('et', language);
+    if (typeof window !== 'undefined' && this.numeral && this.numeral.locale) {
+        this.numeral.locale('et', locale);
     }
 }());

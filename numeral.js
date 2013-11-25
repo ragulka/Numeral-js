@@ -85,6 +85,138 @@
         Formatting
     ************************************/
 
+    // determine what type of formatting we need to do
+    function formatNumeral (n, format, roundingFunction) {
+        var output;
+
+        // figure out what kind of format we are dealing with
+        if (format.indexOf('$') > -1) { // currency!!!!!
+            output = formatCurrency(n, format, roundingFunction);
+        } else if (format.indexOf('%') > -1) { // percentage
+            output = formatPercentage(n, format, roundingFunction);
+        } else if (format.indexOf(':') > -1) { // time
+            output = formatTime(n, format);
+        } else { // plain ol' numbers or bytes
+            output = formatNumber(n._value, format, roundingFunction);
+        }
+
+        // return string
+        return output;
+    }
+
+    // revert to number
+    function unformatNumeral (n, string) {
+        var stringOriginal = string,
+            thousandRegExp,
+            millionRegExp,
+            billionRegExp,
+            trillionRegExp,
+            suffixes = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+            bytesMultiplier = false,
+            power;
+
+        if (string.indexOf(':') > -1) {
+            n._value = unformatTime(string);
+        } else {
+            if (string === zeroFormat) {
+                n._value = 0;
+            } else {
+                if (locales[currentLocale].delimiters.decimal !== '.') {
+                    string = string.replace(/\./g,'').replace(locales[currentLocale].delimiters.decimal, '.');
+                }
+
+                // see if abbreviations are there so that we can multiply to the correct number
+                thousandRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.thousand + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                millionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.million + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                billionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.billion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+                trillionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.trillion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
+
+                // see if bytes are there so that we can multiply to the correct number
+                for (power = 0; power <= suffixes.length; power++) {
+                    bytesMultiplier = (string.indexOf(suffixes[power]) > -1) ? Math.pow(1024, power + 1) : false;
+
+                    if (bytesMultiplier) {
+                        break;
+                    }
+                }
+
+                // do some math to create our number
+                n._value = ((bytesMultiplier) ? bytesMultiplier : 1) * ((stringOriginal.match(thousandRegExp)) ? Math.pow(10, 3) : 1) * ((stringOriginal.match(millionRegExp)) ? Math.pow(10, 6) : 1) * ((stringOriginal.match(billionRegExp)) ? Math.pow(10, 9) : 1) * ((stringOriginal.match(trillionRegExp)) ? Math.pow(10, 12) : 1) * ((string.indexOf('%') > -1) ? 0.01 : 1) * (((string.split('-').length + Math.min(string.split('(').length-1, string.split(')').length-1)) % 2)? 1: -1) * Number(string.replace(/[^0-9\.]+/g, ''));
+
+                // round if we are talking about bytes
+                n._value = (bytesMultiplier) ? Math.ceil(n._value) : n._value;
+            }
+        }
+        return n._value;
+    }
+
+    function formatCurrency (n, format, roundingFunction) {
+        var prependSymbol = format.indexOf('$') <= 1 ? true : false,
+            space = '',
+            output;
+
+        // check for space before or after currency
+        if (format.indexOf(' $') > -1) {
+            space = ' ';
+            format = format.replace(' $', '');
+        } else if (format.indexOf('$ ') > -1) {
+            space = ' ';
+            format = format.replace('$ ', '');
+        } else {
+            format = format.replace('$', '');
+        }
+
+        // format the number
+        output = formatNumber(n._value, format, roundingFunction);
+
+        // position the symbol
+        if (prependSymbol) {
+            if (output.indexOf('(') > -1 || output.indexOf('-') > -1) {
+                output = output.split('');
+                output.splice(1, 0, locales[currentLocale].currency.symbol + space);
+                output = output.join('');
+            } else {
+                output = locales[currentLocale].currency.symbol + space + output;
+            }
+        } else {
+            if (output.indexOf(')') > -1) {
+                output = output.split('');
+                output.splice(-1, 0, space + locales[currentLocale].currency.symbol);
+                output = output.join('');
+            } else {
+                output = output + space + locales[currentLocale].currency.symbol;
+            }
+        }
+
+        return output;
+    }
+
+    function formatPercentage (n, format, roundingFunction) {
+        var space = '',
+            output,
+            value = n._value * 100;
+
+        // check for space before %
+        if (format.indexOf(' %') > -1) {
+            space = ' ';
+            format = format.replace(' %', '');
+        } else {
+            format = format.replace('%', '');
+        }
+
+        output = formatNumber(value, format, roundingFunction);
+        
+        if (output.indexOf(')') > -1 ) {
+            output = output.split('');
+            output.splice(-1, 0, space + '%');
+            output = output.join('');
+        } else {
+            output = output + space + '%';
+        }
+
+        return output;
+    }
+
     function formatTime (n) {
         var hours = Math.floor(n._value/60/60),
             minutes = Math.floor((n._value - (hours * 60 * 60))/60),
@@ -749,6 +881,168 @@
         addExponentPart(exponent, parts);
     }
 
+    /**
+     * Parses text string to produce a Number.
+     *
+     * This method attempts to parse text starting from position "opt_pos" if it
+     * is given. Otherwise the parse will start from the beginning of the text.
+     * When opt_pos presents, opt_pos will be updated to the character next to where
+     * parsing stops after the call. If an error occurs, opt_pos won't be updated.
+     *
+     * @param {string} text The string to be parsed.
+     * @param {string} currency Optional currency.
+     * @param {boolean} strict Whether to bail out when encountering an unknown character.
+     * @return {number} Parsed number. This throws an error if the text cannot be
+     *     parsed.
+     */
+    unformat = function(text, currency, strict) {
+        var pos = 0,
+            ret = NaN;
+
+        // we don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
+        text = text.replace(/ /g, '\u00a0');
+
+        // Check if we are dealing with positive or negative prefixes
+        var positivePrefix = subformatAffix(currentPattern.positivePrefix, currency),
+            negativePrefix = subformatAffix(currentPattern.negativePrefix, currency),
+            gotPositive = text.indexOf(positivePrefix) == pos,
+            gotNegative = text.indexOf(negativePrefix) == pos;
+
+        // Check for the longest match of the two
+        if (gotPositive && gotNegative) {
+            if (positivePrefix.length > negativePrefix.length) {
+                gotNegative = false;
+            } else if (positivePrefix.length < negativePrefix.length) {
+                gotPositive = false;
+            }
+        }
+
+        if (gotPositive) {
+            pos += positivePrefix.length;
+        } else if (gotNegative) {
+            pos += negativePrefix.length;
+        }
+
+        // Process digits or Infinity, find decimal position
+        if (text.indexOf(locales[currentLocale].symbols.infinity, pos) == pos) {
+            pos += locales[currentLocale].symbols.infinity.length;
+            ret = Infinity;
+        } else {
+            ret = unformatNumber(text, pos, strict);
+        }
+
+        // Check if we are dealing with suffixes
+        if (gotPositive) {
+            var positiveSuffix = subformatAffix(currentPattern.positiveSuffix, currency);
+            if (!(text.indexOf(positiveSuffix, pos) == pos)) {
+                return NaN;
+            }
+            pos += positiveSuffix.length;
+        } else if (gotNegative) {
+            var negativeSuffix = subformatAffix(currentPattern.negativeSuffix, currency);
+            if (!(text.indexOf(negativeSuffix, pos) == pos)) {
+                return NaN;
+            }
+            pos += negativeSuffix.length;
+        }
+
+        return gotNegative ? -ret : ret;
+    }
+
+    /**
+     * This function will parse a "localized" text into a Number. It needs to
+     * handle locale specific decimal, grouping, exponent and digits.
+     *
+     * @param {string} text The text that need to be parsed.
+     * @param {number} pos  In/out parsing position. In case of failure,
+     *    pos value won't be changed.
+     * @param {boolean} strict Whether to bail out when encountering an unknown character.
+     * @return {number} Number value, or NaN if nothing can be parsed.
+     * @private
+     */
+    unformatNumber = function(text, pos, strict) {
+        var sawDecimal = false,
+            sawExponent = false,
+            sawDigit = false,
+            scale = 1,
+            decimal = locales[currentLocale].symbols.decimal,
+            grouping = locales[currentLocale].symbols.group,
+            expChar = locales[currentLocale].symbols.exponential;
+
+        var normalizedText = '';
+        for (; pos < text.length; pos++) {
+            var ch = text.charAt(pos);
+            var digit = getDigit(ch);
+            if (digit >= 0 && digit <= 9) {
+                normalizedText += digit;
+                sawDigit = true;
+            } else if (ch == decimal.charAt(0)) {
+                if (sawDecimal || sawExponent) {
+                    break;
+                }
+                normalizedText += '.';
+                sawDecimal = true;
+            } else if (ch == grouping.charAt(0) &&
+                ('\u00a0' != grouping.charAt(0) ||
+                    pos + 1 < text.length &&
+                    getDigit(text.charAt(pos + 1)) >= 0)) {
+                // Got a grouping character here. When grouping character is nbsp, need
+                // to make sure the character following it is a digit.
+                if (sawDecimal || sawExponent) {
+                    break;
+                }
+                continue;
+            } else if (ch == expChar.charAt(0)) {
+                if (sawExponent) {
+                    break;
+                }
+                normalizedText += 'E';
+                sawExponent = true;
+            } else if (ch == '+' || ch == '-') {
+                normalizedText += ch;
+            } else if (ch == locales[currentLocale].symbols.percent.charAt(0)) {
+                if (scale != 1) {
+                    break;
+                }
+                scale = 100;
+                if (sawDigit) {
+                    pos++; // eat this character if parse end here
+                    break;
+                }
+            } else if (ch == locales[currentLocale].symbols.permille.charAt(0)) {
+                if (scale != 1) {
+                    break;
+                }
+                scale = 1000;
+                if (sawDigit) {
+                    pos++; // eat this character if parse end here
+                    break;
+                }
+            } else {
+                if (strict) break;
+            }
+        }
+        return parseFloat(normalizedText) / scale;
+    }
+
+    /**
+     * Returns the digit value of current character. The character could be either
+     * '0' to '9', or a locale specific digit.
+     *
+     * @param {string} ch Character that represents a digit.
+     * @return {number} The digit value, or -1 on error.
+     */
+    getDigit = function(ch) {
+        var code = ch.charCodeAt(0);
+        // between '0' to '9'
+        if (48 <= code && code < 58) {
+            return code - 48;
+        } else {
+            var zeroCode = locales[currentLocale].symbols.zero.charCodeAt(0);
+            return zeroCode <= code && code < zeroCode + 10 ? code - zeroCode : -1;
+        }
+    }    
+
     /************************************
         Top Level Functions
     ************************************/
@@ -1003,11 +1297,13 @@
             return this.format('ordinal', options);
         },
 
-        unformat : function (inputString) {
-            if (Object.prototype.toString.call(inputString) === '[object Number]') { 
-                return inputString; 
-            }
-            return unformatNumeral(this, inputString ? inputString : defaultFormat);
+        unformat : function (input, currency) {
+            currency = currency || locales[currentLocale].currency.local;
+            return unformat(input, currency);
+        },
+
+        setFormat: function(pattern) {
+            applyPattern(pattern);
         },
 
         value : function () {

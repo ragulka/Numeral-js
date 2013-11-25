@@ -674,13 +674,47 @@
         if (!isFinite(number)) {
             parts.push(locales[currentLocale].symbols.infinity);
         } else {
-            // convert number to non-negative value
-            number *= isNegative ? -1 : 1;
+            number = Math.abs(number);
 
             number *= currentPattern.multiplier;
+
+            // If we are dealing with abbreviations, select the correct
+            // abbreviation and manipulate the number
+            if (options.abbr) {
+                var abbr = '';
+                // When using abbreviations, minimum requried decimals should be 0
+                options.minFracDigits = 0;
+
+                if (number >= Math.pow(10, 12)) {
+                    // trillion
+                    abbr = abbr + locales[currentLocale].abbreviations.trillion;
+                    number = number / Math.pow(10, 12);
+                } else if (number < Math.pow(10, 12) && number >= Math.pow(10, 9)) {
+                    // billion
+                    abbr = abbr + locales[currentLocale].abbreviations.billion;
+                    number = number / Math.pow(10, 9);
+                } else if (number < Math.pow(10, 9) && number >= Math.pow(10, 6)) {
+                    // million
+                    abbr = abbr + locales[currentLocale].abbreviations.million;
+                    number = number / Math.pow(10, 6);
+                } else if (number < Math.pow(10, 6) && number >= Math.pow(10, 3)) {
+                    // thousand
+                    abbr = abbr + locales[currentLocale].abbreviations.thousand;
+                    number = number / Math.pow(10, 3);
+                }
+
+            }
+
+            // Format the number part
             currentPattern.useExponentialNotation ?
                 subformatExponential(number, parts) :
                 subformatFixed(number, currentPattern.minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
+
+            // Append the abbreviation
+            if (options.abbr && abbr) {
+                parts.push(abbr);
+            }
+
         }
 
         parts.push(subformatAffix(isNegative ? currentPattern.negativeSuffix : currentPattern.positiveSuffix, options));
@@ -1269,6 +1303,12 @@
             // Apply pattern and format
             applyPattern(pattern);
             return format(this.value(), options);
+        },
+
+        abbr : function(pattern, options) {
+            options = options || {};
+            options.abbr = true;
+            return this.format(pattern, options);
         },
 
         currency: function (currency, options) {

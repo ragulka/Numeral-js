@@ -43,6 +43,9 @@
 
         // List of valid currencies
         currencies = ['ADP','AED','AFA','AFN','ALK','ALL','AMD','ANG','AOA','AOK','AON','AOR','ARA','ARL','ARM','ARP','ARS','ATS','AUD','AWG','AZM','AZN','BAD','BAM','BAN','BBD','BDT','BEC','BEF','BEL','BGL','BGM','BGN','BGO','BHD','BIF','BMD','BND','BOB','BOL','BOP','BOV','BRB','BRC','BRE','BRL','BRN','BRR','BRZ','BSD','BTN','BUK','BWP','BYB','BYR','BZD','CAD','CDF','CHE','CHF','CHW','CLE','CLF','CLP','CNX','CNY','COP','COU','CRC','CSD','CSK','CUC','CUP','CVE','CYP','CZK','DDM','DEM','DJF','DKK','DOP','DZD','ECS','ECV','EEK','EGP','ERN','ESA','ESB','ESP','ETB','EUR','FIM','FJD','FKP','FRF','GBP','GEK','GEL','GHC','GHS','GIP','GMD','GNF','GNS','GQE','GRD','GTQ','GWE','GWP','GYD','HKD','HNL','HRD','HRK','HTG','HUF','IDR','IEP','ILP','ILR','ILS','INR','IQD','IRR','ISJ','ISK','ITL','JMD','JOD','JPY','KES','KGS','KHR','KMF','KPW','KRH','KRO','KRW','KWD','KYD','KZT','LAK','LBP','LKR','LRD','LSL','LTL','LTT','LUC','LUF','LUL','LVL','LVR','LYD','MAD','MAF','MCF','MDC','MDL','MGA','MGF','MKD','MKN','MLF','MMK','MNT','MOP','MRO','MTL','MTP','MUR','MVP','MVR','MWK','MXN','MXP','MXV','MYR','MZE','MZM','MZN','NAD','NGN','NIC','NIO','NLG','NOK','NPR','NZD','OMR','PAB','PEI','PEN','PES','PGK','PHP','PKR','PLN','PLZ','PTE','PYG','QAR','RHD','ROL','RON','RSD','RUB','RUR','RWF','SAR','SBD','SCR','SDD','SDG','SDP','SEK','SGD','SHP','SIT','SKK','SLL','SOS','SRD','SRG','SSP','STD','SUR','SVC','SYP','SZL','THB','TJR','TJS','TMM','TMT','TND','TOP','TPE','TRL','TRY','TTD','TWD','TZS','UAH','UAK','UGS','UGX','USD','USN','USS','UYI','UYP','UYU','UZS','VEB','VEF','VND','VNN','VUV','WST','XAF','XAG','XAU','XBA','XBB','XBC','XBD','XCD','XDR','XEU','XFO','XFU','XOF','XPD','XPF','XPT','XRE','XSU','XTS','XUA','XXX','YDD','YER','YUD','YUM','YUN','YUR','ZAL','ZAR','ZMK','ZRN','ZRZ','ZWD','ZWL','ZWR'],
+
+        // List of byte units
+        byteUnits = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
         
         // Check for nodeJS
         hasModule = (typeof module !== 'undefined' && module.exports);
@@ -702,7 +705,23 @@
                     abbr = abbr + locales[currentLocale].abbreviations.thousand;
                     number = number / Math.pow(10, 3);
                 }
+            }
 
+            // See if we are formatting bytes
+            if (options.bytes) {
+                var bytes = '';
+                for (power = 0; power <= byteUnits.length; power++) {
+                    min = Math.pow(1024, power);
+                    max = Math.pow(1024, power+1);
+
+                    if (number >= min && number < max) {
+                        bytes = bytes + byteUnits[power];
+                        if (min > 0) {
+                            number = number / min;
+                        }
+                        break;
+                    }
+                }
             }
 
             // Format the number part
@@ -711,9 +730,12 @@
                 subformatFixed(number, currentPattern.minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
 
             // Append the abbreviation
-            if (options.abbr && abbr) {
+            if (options.abbr && abbr)
                 parts.push(abbr);
-            }
+
+            // Append the byte unit
+            if (options.bytes && bytes)
+                parts.push(bytes);
 
         }
 
@@ -1311,6 +1333,12 @@
             return this.format(pattern, options);
         },
 
+        bytes: function(options) {
+            options = options || {};
+            options.bytes = true;
+            return this.format(null, options);
+        },
+
         currency: function (currency, options) {
             currency = currency || locales[currentLocale].currency.local;
             options = options || {};
@@ -1328,10 +1356,6 @@
 
         permille: function (options) {
             return this.format('percent', options);
-        },
-
-        bytes: function (options) {
-            return this.format('bytes', options);
         },
 
         ordinal: function (options) {

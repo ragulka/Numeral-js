@@ -669,7 +669,7 @@
         // negative sign for 0.
         var isNegative = number < 0.0 || number == 0.0 && 1 / number < 0.0;
 
-        parts.push(subformatAffix( isNegative ? currentPattern.negativePrefix : currentPattern.positivePrefix, options.currency));
+        parts.push(subformatAffix( isNegative ? currentPattern.negativePrefix : currentPattern.positivePrefix, options));
 
         if (!isFinite(number)) {
             parts.push(locales[currentLocale].symbols.infinity);
@@ -683,7 +683,7 @@
                 subformatFixed(number, currentPattern.minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
         }
 
-        parts.push(subformatAffix(isNegative ? currentPattern.negativeSuffix : currentPattern.positiveSuffix, options.currency));
+        parts.push(subformatAffix(isNegative ? currentPattern.negativeSuffix : currentPattern.positiveSuffix, options));
 
         return parts.join('');
     }
@@ -694,8 +694,9 @@
      * @param {string} affix Value need to be formated.
      * @return The formatted affix
      */
-    subformatAffix = function(affix, currency) {
+    subformatAffix = function(affix, options) {
         var len = affix.length,
+            currency = options.currency,
             parts = [];
         if (!affix.length) return '';
 
@@ -710,7 +711,7 @@
                 break;
                 case CURRENCY:
                     var symbol = currency;
-                    if (locales[currentLocale].currency.symbols && locales[currentLocale].currency.symbols.hasOwnProperty(currency)) {
+                    if (!options.globalStyle && locales[currentLocale].currency.symbols && locales[currentLocale].currency.symbols.hasOwnProperty(currency)) {
                         symbol = locales[currentLocale].currency.symbols[currency];
                     }
                     parts.push(symbol);
@@ -895,7 +896,7 @@
      * @return {number} Parsed number. This throws an error if the text cannot be
      *     parsed.
      */
-    unformat = function(text, currency, strict) {
+    unformat = function(text, options) {
         var pos = 0,
             ret = NaN;
 
@@ -903,8 +904,8 @@
         text = text.replace(/ /g, '\u00a0');
 
         // Check if we are dealing with positive or negative prefixes
-        var positivePrefix = subformatAffix(currentPattern.positivePrefix, currency),
-            negativePrefix = subformatAffix(currentPattern.negativePrefix, currency),
+        var positivePrefix = subformatAffix(currentPattern.positivePrefix, options),
+            negativePrefix = subformatAffix(currentPattern.negativePrefix, options),
             gotPositive = text.indexOf(positivePrefix) == pos,
             gotNegative = text.indexOf(negativePrefix) == pos;
 
@@ -928,18 +929,18 @@
             pos += locales[currentLocale].symbols.infinity.length;
             ret = Infinity;
         } else {
-            ret = unformatNumber(text, pos, strict);
+            ret = unformatNumber(text, pos, options.strict);
         }
 
         // Check if we are dealing with suffixes
         if (gotPositive) {
-            var positiveSuffix = subformatAffix(currentPattern.positiveSuffix, currency);
+            var positiveSuffix = subformatAffix(currentPattern.positiveSuffix, options);
             if (!(text.indexOf(positiveSuffix, pos) == pos)) {
                 return NaN;
             }
             pos += positiveSuffix.length;
         } else if (gotNegative) {
-            var negativeSuffix = subformatAffix(currentPattern.negativeSuffix, currency);
+            var negativeSuffix = subformatAffix(currentPattern.negativeSuffix, options);
             if (!(text.indexOf(negativeSuffix, pos) == pos)) {
                 return NaN;
             }
@@ -1297,8 +1298,9 @@
             return this.format('ordinal', options);
         },
 
-        unformat : function (input, currency) {
-            currency = currency || locales[currentLocale].currency.local;
+        unformat : function (input, options) {
+            options = options || {};
+            options.currency = options.currency || locales[currentLocale].currency.local;
             return unformat(input, currency);
         },
 

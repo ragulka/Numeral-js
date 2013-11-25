@@ -94,112 +94,8 @@
     }
 
     /************************************
-        Formatting
+        Parsing
     ************************************/
-
-    // determine what type of formatting we need to do
-    function formatNumeral (n, format, roundingFunction) {
-        var output;
-
-        // figure out what kind of format we are dealing with
-        if (format.indexOf('$') > -1) { // currency!!!!!
-            output = formatCurrency(n, format, roundingFunction);
-        } else if (format.indexOf('%') > -1) { // percentage
-            output = formatPercentage(n, format, roundingFunction);
-        } else if (format.indexOf(':') > -1) { // time
-            output = formatTime(n, format);
-        } else { // plain ol' numbers or bytes
-            output = formatNumber(n._value, format, roundingFunction);
-        }
-
-        // return string
-        return output;
-    }
-
-    // revert to number
-    function unformatNumeral (n, string) {
-        var stringOriginal = string,
-            thousandRegExp,
-            millionRegExp,
-            billionRegExp,
-            trillionRegExp,
-            suffixes = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-            bytesMultiplier = false,
-            power;
-
-        if (string.indexOf(':') > -1) {
-            n._value = unformatTime(string);
-        } else {
-            if (string === zeroFormat) {
-                n._value = 0;
-            } else {
-                if (locales[currentLocale].delimiters.decimal !== '.') {
-                    string = string.replace(/\./g,'').replace(locales[currentLocale].delimiters.decimal, '.');
-                }
-
-                // see if abbreviations are there so that we can multiply to the correct number
-                thousandRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.thousand + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
-                millionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.million + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
-                billionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.billion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
-                trillionRegExp = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations.trillion + '(?:\\)|(\\' + locales[currentLocale].currency.symbol + ')?(?:\\))?)?$');
-
-                // see if bytes are there so that we can multiply to the correct number
-                for (power = 0; power <= suffixes.length; power++) {
-                    bytesMultiplier = (string.indexOf(suffixes[power]) > -1) ? Math.pow(1024, power + 1) : false;
-
-                    if (bytesMultiplier) {
-                        break;
-                    }
-                }
-
-                // do some math to create our number
-                n._value = ((bytesMultiplier) ? bytesMultiplier : 1) * ((stringOriginal.match(thousandRegExp)) ? Math.pow(10, 3) : 1) * ((stringOriginal.match(millionRegExp)) ? Math.pow(10, 6) : 1) * ((stringOriginal.match(billionRegExp)) ? Math.pow(10, 9) : 1) * ((stringOriginal.match(trillionRegExp)) ? Math.pow(10, 12) : 1) * ((string.indexOf('%') > -1) ? 0.01 : 1) * (((string.split('-').length + Math.min(string.split('(').length-1, string.split(')').length-1)) % 2)? 1: -1) * Number(string.replace(/[^0-9\.]+/g, ''));
-
-                // round if we are talking about bytes
-                n._value = (bytesMultiplier) ? Math.ceil(n._value) : n._value;
-            }
-        }
-        return n._value;
-    }
-
-    /**
-     * Format seconds into H:m:s format
-     *
-     * @param {number} number Number (seconds) to be formatted.
-     * @return {string} time Time-representation of the number.
-     */
-    function formatTime (number) {
-        var hours = Math.floor(number/60/60),
-            minutes = Math.floor((number - (hours * 60 * 60))/60),
-            seconds = Math.round(number - (hours * 60 * 60) - (minutes * 60));
-        return hours + ':' + ((minutes < 10) ? '0' + minutes : minutes) + ':' + ((seconds < 10) ? '0' + seconds : seconds);
-    }
-
-    /**
-     * Parse formatted time into number (seconds)
-     *
-     * @param {string} text The text that needs to be parsed.
-     * @return {number} seconds Parsed time in seconds.
-     */
-    function unformatTime (text) {
-        var timeArray = text.split(':'),
-            seconds = 0;
-        // Turn hours and minutes into seconds and add them all up
-        if (timeArray.length === 3) {
-            // hours
-            seconds = seconds + (Number(timeArray[0]) * 60 * 60);
-            // minutes
-            seconds = seconds + (Number(timeArray[1]) * 60);
-            // seconds
-            seconds = seconds + Number(timeArray[2]);
-        } else if (timeArray.length === 2) {
-            // minutes
-            seconds = seconds + (Number(timeArray[0]) * 60);
-            // seconds
-            seconds = seconds + Number(timeArray[1]);
-        }
-        return Number(seconds);
-    }
 
     /**
      * Apply provided pattern, result are stored in the patterns object.
@@ -458,6 +354,10 @@
             decimalPos == totalDigits;
     }
 
+    /************************************
+        Formatting
+    ************************************/    
+
     /**
      * Formats a Number to produce a string.
      *
@@ -467,6 +367,10 @@
     function format (number, options) {
         if (isNaN(number)) {
             return locales[currentLocale].symbols.nan;
+        }
+
+        if (number === 0 && zeroFormat !== null) {
+            return zeroFormat;
         }
 
         options = options || {};
@@ -753,6 +657,19 @@
     }
 
     /**
+     * Format seconds into H:m:s format
+     *
+     * @param {number} number Number (seconds) to be formatted.
+     * @return {string} time Time-representation of the number.
+     */
+    function formatTime (number) {
+        var hours = Math.floor(number/60/60),
+            minutes = Math.floor((number - (hours * 60 * 60))/60),
+            seconds = Math.round(number - (hours * 60 * 60) - (minutes * 60));
+        return hours + ':' + ((minutes < 10) ? '0' + minutes : minutes) + ':' + ((seconds < 10) ? '0' + seconds : seconds);
+    }    
+
+    /**
      * Parses text string to produce a Number.
      *
      * This method attempts to parse text starting from position "opt_pos" if it
@@ -776,6 +693,10 @@
         // Check if we are dealing with time?
         if (text.indexOf(':') > -1) {
             return unformatTime(text);
+        }
+
+        if (text === zeroFormat) {
+            return 0;
         }
 
         // Check if we are dealing with positive or negative prefixes
@@ -937,6 +858,32 @@
             var zeroCode = locales[currentLocale].symbols.zero.charCodeAt(0);
             return zeroCode <= code && code < zeroCode + 10 ? code - zeroCode : -1;
         }
+    }
+
+    /**
+     * Parse formatted time into number (seconds)
+     *
+     * @param {string} text The text that needs to be parsed.
+     * @return {number} seconds Parsed time in seconds.
+     */
+    function unformatTime (text) {
+        var timeArray = text.split(':'),
+            seconds = 0;
+        // Turn hours and minutes into seconds and add them all up
+        if (timeArray.length === 3) {
+            // hours
+            seconds = seconds + (Number(timeArray[0]) * 60 * 60);
+            // minutes
+            seconds = seconds + (Number(timeArray[1]) * 60);
+            // seconds
+            seconds = seconds + Number(timeArray[2]);
+        } else if (timeArray.length === 2) {
+            // minutes
+            seconds = seconds + (Number(timeArray[0]) * 60);
+            // seconds
+            seconds = seconds + Number(timeArray[1]);
+        }
+        return Number(seconds);
     }    
 
     /************************************
@@ -1040,10 +987,6 @@
                 (b === 3) ? 'rd' : 'th';
         }        
     });
-
-    numeral.zeroFormat = function (format) {
-        zeroFormat = typeof(format) === 'string' ? format : null;
-    };
 
     /************************************
         Helpers
@@ -1216,6 +1159,10 @@
 
         setFormat: function(pattern) {
             applyPattern(pattern);
+        },
+
+        zeroFormat: function(format) {
+            zeroFormat = typeof(format) === 'string' ? format : null;
         },
 
         value : function () {

@@ -46,6 +46,14 @@
 
         // List of byte units
         byteUnits = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+
+        // List of abbreviations powers
+        powers = {
+            thousand:   Math.pow(10, 3),
+            million:    Math.pow(10, 6),
+            billion:    Math.pow(10, 9),
+            trillion:   Math.pow(10, 12),
+        },
         
         // Check for nodeJS
         hasModule = (typeof module !== 'undefined' && module.exports);
@@ -59,6 +67,7 @@
     // Numeral prototype object
     function Numeral (number) {
         this._value = number;
+        if (!currentPattern) applyPattern(locales[currentLocale].patterns.decimal);
     }
 
     /**
@@ -153,84 +162,29 @@
         return n._value;
     }
 
-    function formatCurrency (n, format, roundingFunction) {
-        var prependSymbol = format.indexOf('$') <= 1 ? true : false,
-            space = '',
-            output;
-
-        // check for space before or after currency
-        if (format.indexOf(' $') > -1) {
-            space = ' ';
-            format = format.replace(' $', '');
-        } else if (format.indexOf('$ ') > -1) {
-            space = ' ';
-            format = format.replace('$ ', '');
-        } else {
-            format = format.replace('$', '');
-        }
-
-        // format the number
-        output = formatNumber(n._value, format, roundingFunction);
-
-        // position the symbol
-        if (prependSymbol) {
-            if (output.indexOf('(') > -1 || output.indexOf('-') > -1) {
-                output = output.split('');
-                output.splice(1, 0, locales[currentLocale].currency.symbol + space);
-                output = output.join('');
-            } else {
-                output = locales[currentLocale].currency.symbol + space + output;
-            }
-        } else {
-            if (output.indexOf(')') > -1) {
-                output = output.split('');
-                output.splice(-1, 0, space + locales[currentLocale].currency.symbol);
-                output = output.join('');
-            } else {
-                output = output + space + locales[currentLocale].currency.symbol;
-            }
-        }
-
-        return output;
-    }
-
-    function formatPercentage (n, format, roundingFunction) {
-        var space = '',
-            output,
-            value = n._value * 100;
-
-        // check for space before %
-        if (format.indexOf(' %') > -1) {
-            space = ' ';
-            format = format.replace(' %', '');
-        } else {
-            format = format.replace('%', '');
-        }
-
-        output = formatNumber(value, format, roundingFunction);
-        
-        if (output.indexOf(')') > -1 ) {
-            output = output.split('');
-            output.splice(-1, 0, space + '%');
-            output = output.join('');
-        } else {
-            output = output + space + '%';
-        }
-
-        return output;
-    }
-
-    function formatTime (n) {
-        var hours = Math.floor(n._value/60/60),
-            minutes = Math.floor((n._value - (hours * 60 * 60))/60),
-            seconds = Math.round(n._value - (hours * 60 * 60) - (minutes * 60));
+    /**
+     * Format seconds into H:m:s format
+     *
+     * @param {number} number Number (seconds) to be formatted.
+     * @return {string} time Time-representation of the number.
+     */
+    function formatTime (number) {
+        var hours = Math.floor(number/60/60),
+            minutes = Math.floor((number - (hours * 60 * 60))/60),
+            seconds = Math.round(number - (hours * 60 * 60) - (minutes * 60));
         return hours + ':' + ((minutes < 10) ? '0' + minutes : minutes) + ':' + ((seconds < 10) ? '0' + seconds : seconds);
     }
 
-    function unformatTime (string) {
-        var timeArray = string.split(':'),
+    /**
+     * Parse formatted time into number (seconds)
+     *
+     * @param {string} text The text that needs to be parsed.
+     * @return {number} seconds Parsed time in seconds.
+     */
+    function unformatTime (text) {
+        var timeArray = text.split(':'),
             seconds = 0;
-        // turn hours and minutes into seconds and add them all up
+        // Turn hours and minutes into seconds and add them all up
         if (timeArray.length === 3) {
             // hours
             seconds = seconds + (Number(timeArray[0]) * 60 * 60);
@@ -247,161 +201,12 @@
         return Number(seconds);
     }
 
-    function formatNumber (value, format, roundingFunction) {
-        var negP = false,
-            signed = false,
-            optDec = false,
-            abbr = '',
-            bytes = '',
-            ord = '',
-            abs = Math.abs(value),
-            suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-            min,
-            max,
-            power,
-            w,
-            precision,
-            thousands,
-            d = '',
-            neg = false;
-
-        // check if number is zero and a custom zero format has been set
-        if (value === 0 && zeroFormat !== null) {
-            return zeroFormat;
-        } else {
-            // see if we should use parentheses for negative number or if we should prefix with a sign
-            // if both are present we default to parentheses
-            if (format.indexOf('(') > -1) {
-                negP = true;
-                format = format.slice(1, -1);
-            } else if (format.indexOf('+') > -1) {
-                signed = true;
-                format = format.replace(/\+/g, '');
-            }
-
-            // see if abbreviation is wanted
-            if (format.indexOf('a') > -1) {
-                // check for space before abbreviation
-                if (format.indexOf(' a') > -1) {
-                    abbr = ' ';
-                    format = format.replace(' a', '');
-                } else {
-                    format = format.replace('a', '');
-                }
-
-                if (abs >= Math.pow(10, 12)) {
-                    // trillion
-                    abbr = abbr + locales[currentLocale].abbreviations.trillion;
-                    value = value / Math.pow(10, 12);
-                } else if (abs < Math.pow(10, 12) && abs >= Math.pow(10, 9)) {
-                    // billion
-                    abbr = abbr + locales[currentLocale].abbreviations.billion;
-                    value = value / Math.pow(10, 9);
-                } else if (abs < Math.pow(10, 9) && abs >= Math.pow(10, 6)) {
-                    // million
-                    abbr = abbr + locales[currentLocale].abbreviations.million;
-                    value = value / Math.pow(10, 6);
-                } else if (abs < Math.pow(10, 6) && abs >= Math.pow(10, 3)) {
-                    // thousand
-                    abbr = abbr + locales[currentLocale].abbreviations.thousand;
-                    value = value / Math.pow(10, 3);
-                }
-            }
-
-            // see if we are formatting bytes
-            if (format.indexOf('b') > -1) {
-                // check for space before
-                if (format.indexOf(' b') > -1) {
-                    bytes = ' ';
-                    format = format.replace(' b', '');
-                } else {
-                    format = format.replace('b', '');
-                }
-
-                for (power = 0; power <= suffixes.length; power++) {
-                    min = Math.pow(1024, power);
-                    max = Math.pow(1024, power+1);
-
-                    if (value >= min && value < max) {
-                        bytes = bytes + suffixes[power];
-                        if (min > 0) {
-                            value = value / min;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            // see if ordinal is wanted
-            if (format.indexOf('o') > -1) {
-                // check for space before
-                if (format.indexOf(' o') > -1) {
-                    ord = ' ';
-                    format = format.replace(' o', '');
-                } else {
-                    format = format.replace('o', '');
-                }
-
-                ord = ord + locales[currentLocale].ordinal(value);
-            }
-
-            if (format.indexOf('[.]') > -1) {
-                optDec = true;
-                format = format.replace('[.]', '.');
-            }
-
-            w = value.toString().split('.')[0];
-            precision = format.split('.')[1];
-            thousands = format.indexOf(',');
-
-            if (precision) {
-                if (precision.indexOf('[') > -1) {
-                    precision = precision.replace(']', '');
-                    precision = precision.split('[');
-                    d = toFixed(value, (precision[0].length + precision[1].length), roundingFunction, precision[1].length);
-                } else {
-                    d = toFixed(value, precision.length, roundingFunction);
-                }
-
-                w = d.split('.')[0];
-
-                if (d.split('.')[1].length) {
-                    d = locales[currentLocale].delimiters.decimal + d.split('.')[1];
-                } else {
-                    d = '';
-                }
-
-                if (optDec && Number(d.slice(1)) === 0) {
-                    d = '';
-                }
-            } else {
-                w = toFixed(value, null, roundingFunction);
-            }
-
-            // format number
-            if (w.indexOf('-') > -1) {
-                w = w.slice(1);
-                neg = true;
-            }
-
-            if (thousands > -1) {
-                w = w.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + locales[currentLocale].delimiters.thousands);
-            }
-
-            if (format.indexOf('.') === 0) {
-                w = '';
-            }
-
-            return ((negP && neg) ? '(' : '') + ((!negP && neg) ? '-' : '') + ((!neg && signed) ? '+' : '') + w + d + ((ord) ? ord : '') + ((abbr) ? abbr : '') + ((bytes) ? bytes : '') + ((negP && neg) ? ')' : '');
-        }
-    }
-
     /**
      * Apply provided pattern, result are stored in the patterns object.
      *
      * @param {string} pattern String pattern being applied.
      */
-    applyPattern = function(pattern) {
+    function applyPattern (pattern) {
         pattern = pattern.replace(/ /g, '\u00a0');
 
         // Parse only if parsing results do not exist
@@ -459,7 +264,7 @@
      *
      * @return {string} Affix received from parsing.
      */
-    parseAffix = function(pattern, pos) {
+    function parseAffix (pattern, pos) {
         var affix = '';
         var inQuote = false;
         var len = pattern.length;
@@ -525,7 +330,7 @@
      * @param {Array.<number>} pos One element position array to set and receive
      *     parsing position.
      */
-    parseTrunk = function(pattern, pos) {
+    function parseTrunk (pattern, pos) {
         var decimalPos = -1;
         var digitLeftCount = 0;
         var zeroDigitCount = 0;
@@ -659,7 +464,7 @@
      * @param {number} number The Number to be formatted.
      * @return {string} The formatted number string.
      */
-    format = function(number, options) {
+    function format (number, options) {
         if (isNaN(number)) {
             return locales[currentLocale].symbols.nan;
         }
@@ -688,22 +493,22 @@
                 // When using abbreviations, minimum requried decimals should be 0
                 options.minFracDigits = 0;
 
-                if (number >= Math.pow(10, 12)) {
+                if (number >= powers.trillion) {
                     // trillion
                     abbr = abbr + locales[currentLocale].abbreviations.trillion;
-                    number = number / Math.pow(10, 12);
-                } else if (number < Math.pow(10, 12) && number >= Math.pow(10, 9)) {
+                    number = number / powers.trillion;
+                } else if (number < powers.trillion && number >= powers.billion) {
                     // billion
                     abbr = abbr + locales[currentLocale].abbreviations.billion;
-                    number = number / Math.pow(10, 9);
-                } else if (number < Math.pow(10, 9) && number >= Math.pow(10, 6)) {
+                    number = number / powers.billion;
+                } else if (number < powers.billion && number >= powers.million) {
                     // million
                     abbr = abbr + locales[currentLocale].abbreviations.million;
-                    number = number / Math.pow(10, 6);
-                } else if (number < Math.pow(10, 6) && number >= Math.pow(10, 3)) {
+                    number = number / powers.million;
+                } else if (number < powers.million && number >= powers.thousand) {
                     // thousand
                     abbr = abbr + locales[currentLocale].abbreviations.thousand;
-                    number = number / Math.pow(10, 3);
+                    number = number / powers.thousand;
                 }
             }
 
@@ -759,7 +564,7 @@
      * @param {string} affix Value need to be formated.
      * @return The formatted affix
      */
-    subformatAffix = function(affix, options) {
+    function subformatAffix (affix, options) {
         var len = affix.length,
             currency = options.currency,
             parts = [];
@@ -799,7 +604,7 @@
      * @param {Array} parts This array holds the pieces of formatted string.
      *     This function will add its formatted pieces to the array.
      */
-    subformatFixed = function(number, minIntDigits, minFracDigits, maxFracDigits, parts) {
+    function subformatFixed (number, minIntDigits, minFracDigits, maxFracDigits, parts) {
         minFracDigits = minFracDigits >= 0 ? minFracDigits : currentPattern.minFracDigits;
         maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : currentPattern.maxFracDigits;
         if (maxFracDigits < minFracDigits) maxFracDigits = minFracDigits;
@@ -883,7 +688,7 @@
      *     string. This function will append more formatted pieces to the array.
      * @private
      */
-    addExponentPart = function(exponent, parts) {
+    function addExponentPart (exponent, parts) {
         parts.push(locales[currentLocale].symbols.exponential);
 
         if (exponent < 0) {
@@ -910,7 +715,7 @@
      *     string. This function will append more formatted pieces to the array.
      * @private
      */
-    subformatExponential = function(number, minFracDigits, maxFracDigits, parts) {
+    function subformatExponential (number, minFracDigits, maxFracDigits, parts) {
         if (number == 0.0) {
             subformatFixed(number, currentPattern.minIntDigits, minFracDigits, maxFracDigits, parts);
             addExponentPart(0, parts);
@@ -961,12 +766,17 @@
      * @return {number} Parsed number. This throws an error if the text cannot be
      *     parsed.
      */
-    unformat = function(text, options) {
+    function unformat (text, options) {
         var pos = 0,
             ret = NaN;
 
-        // we don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
+        // We don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
         text = text.replace(/ /g, '\u00a0');
+
+        // Check if we are dealing with time?
+        if (text.indexOf(':') > -1) {
+            return unformatTime(text);
+        }
 
         // Check if we are dealing with positive or negative prefixes
         var positivePrefix = subformatAffix(currentPattern.positivePrefix, options),
@@ -993,7 +803,7 @@
         if (text.indexOf(locales[currentLocale].symbols.infinity, pos) == pos) {
             pos += locales[currentLocale].symbols.infinity.length;
             ret = Infinity;
-        } else {
+        } else {          
             ret = unformatNumber(text, pos, options.strict);
         }
 
@@ -1026,14 +836,34 @@
      * @return {number} Number value, or NaN if nothing can be parsed.
      * @private
      */
-    unformatNumber = function(text, pos, strict) {
+    function unformatNumber (text, pos, strict) {
         var sawDecimal = false,
             sawExponent = false,
             sawDigit = false,
             scale = 1,
+            bytesMultiplier = 1,
+            powerMultiplier = 1,
             decimal = locales[currentLocale].symbols.decimal,
             grouping = locales[currentLocale].symbols.group,
             expChar = locales[currentLocale].symbols.exponential;
+
+        // Check if we are dealing with bytes
+        for (var power = 0; power <= byteUnits.length; power++) {
+            if (text.indexOf(byteUnits[power]) > -1) {
+                bytesMultiplier = Math.pow(1024, power + 1);
+                break;
+            }
+        }
+
+        // Check if we are dealing with abbreviations
+        for (var key in locales[currentLocale].abbreviations) {
+            var regex = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations[key] + '(?:\\)?)?$');
+            if (text.match(regex)) {
+                powerMultiplier = powers[key];
+                break;
+            }
+        }       
+
 
         var normalizedText = '';
         for (; pos < text.length; pos++) {
@@ -1088,7 +918,7 @@
                 if (strict) break;
             }
         }
-        return parseFloat(normalizedText) / scale;
+        return parseFloat(normalizedText) / scale * bytesMultiplier * powerMultiplier;
     }
 
     /**
@@ -1098,7 +928,7 @@
      * @param {string} ch Character that represents a digit.
      * @return {number} The digit value, or -1 on error.
      */
-    getDigit = function(ch) {
+    function getDigit (ch) {
         var code = ch.charCodeAt(0);
         // between '0' to '9'
         if (48 <= code && code < 58) {
@@ -1189,7 +1019,8 @@
             scientific: '#E0',
             percent:    '#,##0%',
             currency:   '\u00A4#,##0.00',
-            accounting: '\u00A4#,##0.00;(\u00A4#,##0.00)'
+            accounting: '\u00A4#,##0.00;(\u00A4#,##0.00)',
+            bytes:      '#,##0.###B',
         },
         abbreviations: {
             thousand:   'k',
@@ -1212,10 +1043,6 @@
 
     numeral.zeroFormat = function (format) {
         zeroFormat = typeof(format) === 'string' ? format : null;
-    };
-
-    numeral.defaultFormat = function (format) {
-        defaultFormat = typeof(format) === 'string' ? format : '0.0';
     };
 
     /************************************
@@ -1323,7 +1150,7 @@
         },
 
         format : function (pattern, options) {
-            pattern = pattern || 'decimal';
+            pattern = pattern || (currentPattern || 'decimal');
             options = options || {};
 
             // Look up pattern from locale
@@ -1331,21 +1158,17 @@
                 pattern = locales[currentLocale].patterns[pattern];
             }
 
+            var previousPattern = '' + currentPattern;
             // Apply pattern and format
             applyPattern(pattern);
-            return format(this.value(), options);
+            var result = format(this.value(), options);
+            // Restore the previous pattern
+            applyPattern(previousPattern);
+            return result;
         },
 
-        abbr : function(pattern, options) {
-            options = options || {};
-            options.abbr = true;
-            return this.format(pattern, options);
-        },
-
-        bytes: function(options) {
-            options = options || {};
-            options.bytes = true;
-            return this.format(null, options);
+        decimal: function (options) {
+            return this.format('decimal', options);
         },
 
         currency: function (currency, options) {
@@ -1361,11 +1184,7 @@
 
         percent: function (options) {
             return this.format('percent', options);
-        },
-
-        permille: function (options) {
-            return this.format('percent', options);
-        },
+        },        
 
         ordinal: function (options) {
             options = options || {};
@@ -1373,10 +1192,26 @@
             return this.format(null, options);
         },
 
+        abbr : function(pattern, options) {
+            options = options || {};
+            options.abbr = true;
+            return this.format(pattern, options);
+        },
+
+        bytes: function(options) {
+            options = options || {};
+            options.bytes = true;            
+            return this.format(null, options);
+        },
+
+        time: function() {
+            return formatTime( this.value() );
+        },
+
         unformat : function (input, options) {
             options = options || {};
             options.currency = options.currency || locales[currentLocale].currency.local;
-            return unformat(input, currency);
+            return unformat(input, options);
         },
 
         setFormat: function(pattern) {

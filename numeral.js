@@ -724,6 +724,11 @@
                 }
             }
 
+            // See if ordinal is wanted
+            if (options.ordinal) {
+                var ordinal = '' + locales[currentLocale].ordinal(number);
+            }
+
             // Format the number part
             currentPattern.useExponentialNotation ?
                 subformatExponential(number, parts) :
@@ -736,6 +741,10 @@
             // Append the byte unit
             if (options.bytes && bytes)
                 parts.push(bytes);
+
+            // Append the ordinal
+            if (options.ordinal && ordinal)
+                parts.push(ordinal);
 
         }
 
@@ -1359,7 +1368,9 @@
         },
 
         ordinal: function (options) {
-            return this.format('ordinal', options);
+            options = options || {};
+            options.ordinal = true;
+            return this.format(null, options);
         },
 
         unformat : function (input, options) {

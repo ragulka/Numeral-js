@@ -11,6 +11,11 @@
     "money",
     "percentage"
   ],
-  "scripts": [ "numeral.js" ],
-  "main": "numeral.js"
+  "scripts": [
+    "numeral.js"
+  ],
+  "main": "numeral.js",
+  "dependencies": {
+    "big.js": "~2.4.1"
+  }
 }

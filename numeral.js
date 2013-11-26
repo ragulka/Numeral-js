@@ -148,7 +148,7 @@
         }
 
         // Set the current pattern
-        currentPattern = patterns[pattern];
+        currentPattern = pattern;
     }
 
     /**
@@ -381,14 +381,14 @@
         // negative sign for 0.
         var isNegative = number < 0.0 || number == 0.0 && 1 / number < 0.0;
 
-        parts.push(subformatAffix( isNegative ? currentPattern.negativePrefix : currentPattern.positivePrefix, options));
+        parts.push(subformatAffix( isNegative ? patterns[currentPattern].negativePrefix : patterns[currentPattern].positivePrefix, options));
 
         if (!isFinite(number)) {
             parts.push(locales[currentLocale].symbols.infinity);
         } else {
             number = Math.abs(number);
 
-            number *= currentPattern.multiplier;
+            number *= patterns[currentPattern].multiplier;
 
             // If we are dealing with abbreviations, select the correct
             // abbreviation and manipulate the number
@@ -439,9 +439,9 @@
             }
 
             // Format the number part
-            currentPattern.useExponentialNotation ?
+            patterns[currentPattern].useExponentialNotation ?
                 subformatExponential(number, parts) :
-                subformatFixed(number, currentPattern.minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
+                subformatFixed(number, patterns[currentPattern].minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
 
             // Append the abbreviation
             if (options.abbr && abbr)
@@ -457,7 +457,7 @@
 
         }
 
-        parts.push(subformatAffix(isNegative ? currentPattern.negativeSuffix : currentPattern.positiveSuffix, options));
+        parts.push(subformatAffix(isNegative ? patterns[currentPattern].negativeSuffix : patterns[currentPattern].positiveSuffix, options));
 
         return parts.join('');
     }
@@ -509,8 +509,8 @@
      *     This function will add its formatted pieces to the array.
      */
     function subformatFixed (number, minIntDigits, minFracDigits, maxFracDigits, parts) {
-        minFracDigits = minFracDigits >= 0 ? minFracDigits : currentPattern.minFracDigits;
-        maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : currentPattern.maxFracDigits;
+        minFracDigits = minFracDigits >= 0 ? minFracDigits : patterns[currentPattern].minFracDigits;
+        maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : patterns[currentPattern].maxFracDigits;
         if (maxFracDigits < minFracDigits) maxFracDigits = minFracDigits;
 
         // Round the number
@@ -551,12 +551,12 @@
                 parts.push(String.fromCharCode(zeroCode + intPart.charAt(i) * 1));
                 var cPos = digitLen - i;
 
-                if (cPos > 1 && currentPattern.groupingSize > 0) {
-                    if (currentPattern.groupingSize2 > 0 && cPos > currentPattern.groupingSize &&
-                        (cPos - currentPattern.groupingSize) % currentPattern.groupingSize2 == 1) {
+                if (cPos > 1 && patterns[currentPattern].groupingSize > 0) {
+                    if (patterns[currentPattern].groupingSize2 > 0 && cPos > patterns[currentPattern].groupingSize &&
+                        (cPos - patterns[currentPattern].groupingSize) % patterns[currentPattern].groupingSize2 == 1) {
                         parts.push(grouping);
-                    } else if (currentPattern.groupingSize2 == 0 &&
-                        cPos % currentPattern.groupingSize == 1) {
+                    } else if (patterns[currentPattern].groupingSize2 == 0 &&
+                        cPos % patterns[currentPattern].groupingSize == 1) {
                         parts.push(grouping);
                     }
                 }
@@ -568,7 +568,7 @@
         }
 
         // Output the decimal separator if we always do so.
-        if (currentPattern.decimalSeparatorAlwaysShown || fractionPresent) {
+        if (patterns[currentPattern].decimalSeparatorAlwaysShown || fractionPresent) {
             parts.push(decimal);
         }
 
@@ -598,14 +598,14 @@
         if (exponent < 0) {
             exponent = -exponent;
             parts.push(locales[currentLocale].symbols.minus);
-        } else if (currentPattern.useSignForPositiveExp) {
+        } else if (patterns[currentPattern].useSignForPositiveExp) {
             parts.push(locales[currentLocale].symbols.plus);
         }
 
         var exponentDigits = '' + exponent,
             zeroChar = enforceAsciiDigits ? '0' : locales[currentLocale].symbols.zero;
         
-        for (var i = exponentDigits.length; i < currentPattern.minExpDigits; i++) {
+        for (var i = exponentDigits.length; i < patterns[currentPattern].minExpDigits; i++) {
             parts.push(zeroChar);
         }
         parts.push(exponentDigits);
@@ -621,7 +621,7 @@
      */
     function subformatExponential (number, minFracDigits, maxFracDigits, parts) {
         if (number == 0.0) {
-            subformatFixed(number, currentPattern.minIntDigits, minFracDigits, maxFracDigits, parts);
+            subformatFixed(number, patterns[currentPattern].minIntDigits, minFracDigits, maxFracDigits, parts);
             addExponentPart(0, parts);
             return;
         }
@@ -629,27 +629,27 @@
         var exponent = Math.floor(Math.log(number) / Math.log(10));
         number /= Math.pow(10, exponent);
 
-        var minIntDigits = currentPattern.minIntDigits;
-        if (currentPattern.maxIntDigits > 1 &&
-            currentPattern.maxIntDigits > currentPattern.minIntDigits) {
+        var minIntDigits = patterns[currentPattern].minIntDigits;
+        if (patterns[currentPattern].maxIntDigits > 1 &&
+            patterns[currentPattern].maxIntDigits > patterns[currentPattern].minIntDigits) {
             // A repeating range is defined; adjust to it as follows.
             // If repeat == 3, we have 6,5,4=>3; 3,2,1=>0; 0,-1,-2=>-3;
             // -3,-4,-5=>-6, etc. This takes into account that the
             // exponent we have here is off by one from what we expect;
             // it is for the format 0.MMMMMx10^n.
-            while ((exponent % currentPattern.maxIntDigits) != 0) {
+            while ((exponent % patterns[currentPattern].maxIntDigits) != 0) {
                 number *= 10;
                 exponent--;
             }
             minIntDigits = 1;
         } else {
             // No repeating range is defined; use minimum integer digits.
-            if (currentPattern.minIntDigits < 1) {
+            if (patterns[currentPattern].minIntDigits < 1) {
                 exponent++;
                 number /= 10;
             } else {
-                exponent -= currentPattern.minIntDigits - 1;
-                number *= Math.pow(10, currentPattern.minIntDigits - 1);
+                exponent -= patterns[currentPattern].minIntDigits - 1;
+                number *= Math.pow(10, patterns[currentPattern].minIntDigits - 1);
             }
         }
         subformatFixed(number, minIntDigits, parts);
@@ -700,8 +700,8 @@
         }
 
         // Check if we are dealing with positive or negative prefixes
-        var positivePrefix = subformatAffix(currentPattern.positivePrefix, options),
-            negativePrefix = subformatAffix(currentPattern.negativePrefix, options),
+        var positivePrefix = subformatAffix(patterns[currentPattern].positivePrefix, options),
+            negativePrefix = subformatAffix(patterns[currentPattern].negativePrefix, options),
             gotPositive = text.indexOf(positivePrefix) == pos,
             gotNegative = text.indexOf(negativePrefix) == pos;
 
@@ -730,13 +730,13 @@
 
         // Check if we are dealing with suffixes
         if (gotPositive) {
-            var positiveSuffix = subformatAffix(currentPattern.positiveSuffix, options);
+            var positiveSuffix = subformatAffix(patterns[currentPattern].positiveSuffix, options);
             if (!(text.indexOf(positiveSuffix, pos) == pos)) {
                 return NaN;
             }
             pos += positiveSuffix.length;
         } else if (gotNegative) {
-            var negativeSuffix = subformatAffix(currentPattern.negativeSuffix, options);
+            var negativeSuffix = subformatAffix(patterns[currentPattern].negativeSuffix, options);
             if (!(text.indexOf(negativeSuffix, pos) == pos)) {
                 return NaN;
             }

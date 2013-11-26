@@ -141,6 +141,31 @@ exports.misc = {
         test.done();
     },
 
+    round: function (test) {
+        var num1, num2;
+
+        // Rounding mode should be applied to instance only, if setting via instance method
+        numeral.rm(0);
+        num1 = numeral();
+        num2 = numeral();
+        test.strictEqual( numeral(0.615).round(2).value(), 0.61 );
+        test.strictEqual( num1.set(0.615).round(2).value(), 0.61 );
+        test.strictEqual( num2.set(0.615).round(2).value(), 0.61 );
+
+        num1.rm(1);
+        num2.rm(3);
+        test.strictEqual( numeral(0.615).round(2).value(), 0.61 );
+        test.strictEqual( num1.set(0.615).round(2).value(), 0.62 );
+        test.strictEqual( num2.set(0.615).round(2).value(), 0.62 );
+        test.strictEqual( num2.set(0.615).rm(2).round(2).value(), 0.62 );
+        test.strictEqual( num1.set(0.615).round(2, 1).value(), 0.62 );
+
+        numeral.rm(1);
+
+        test.done();
+
+    },
+
 
     toFixed: function (test) {
         test.expect(6);

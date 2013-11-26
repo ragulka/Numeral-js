@@ -172,6 +172,8 @@ exports.format = {
 
     setFormat: function(test) {
         var num1, num2;
+
+        // Format should be applied to local instance only, if setting via instance method
         
         numeral.setFormat('#,##0');
         num1 = numeral(10000.23);

@@ -906,7 +906,7 @@
     ************************************/
 
     numeral = function (input, rm) {
-        Big['RM'] = rm || Big['RM'];
+        this._rm = rm || Big['RM'];
 
         if (!currentPattern) {
             currentPattern = locales[currentLocale].patterns.decimal;
@@ -939,7 +939,7 @@
 
     // custom zero format
     numeral.roundingMode = numeral.rm = function(rm) {
-        Big['RM'] = parseInt(rm, 10) >= 0 ? rm : Big['RM'];
+        return setRoundingMode(rm);
     };
 
     // Set current format
@@ -1041,6 +1041,11 @@
         return false;
     }
 
+    function setRoundingMode(rm) {
+        Big['RM'] = !isNaN(Number(rm)) ? Number(rm) : Big['RM'];
+        return Big['RM'];
+    }
+
 
     /************************************
         Numeral Prototype
@@ -1057,10 +1062,16 @@
 
         format : function (pattern, options) {
             var prevPattern = '' + currentPattern,
+                prevRm = Big['RM'],
+                rm,
                 result;
 
             pattern = pattern || ( ( this._currentPattern || currentPattern ) || 'decimal');
             options = options || {};
+
+            // Set rounding mode
+            rm = options.rm || this._rm;
+            setRoundingMode(rm);
 
             // Look up pattern from locale
             if (pattern in locales[currentLocale].patterns) {
@@ -1076,6 +1087,7 @@
             if (prevPattern) {
                 currentPattern = prevPattern;
             }
+            setRoundingMode(prevRm);
 
             return result;
         },
@@ -1124,12 +1136,18 @@
         unformat : function (input, options) {
             var pattern,
                 prevPattern = '' + currentPattern,
+                prevRm = Big['RM'],
+                rm,
                 result;
 
             // Get the current pattern
             pattern = ( this._currentPattern || currentPattern ) || 'decimal';
             options = options || {};
             options.currency = options.currency || locales[currentLocale].currency.local;
+
+            // Set rounding mode
+            rm = options.rm || this._rm;
+            setRoundingMode(rm);            
 
             // Look up pattern from locale
             if (pattern in locales[currentLocale].patterns) {
@@ -1145,6 +1163,7 @@
             if (prevPattern) {
                 currentPattern = prevPattern;
             }
+            setRoundingMode(prevRm);
 
             if (options.set) {
                 this.set( result );
@@ -1220,6 +1239,7 @@
     };
 
     numeral.fn.round = function(dp, rm) {
+        rm = Number(rm) >= 0 ? Number(rm) : this._rm;
         this._value = this._value.round(dp, rm);
         return this;
     };
@@ -1262,7 +1282,7 @@
     };
 
     numeral.fn.rm = numeral.fn.roundingMode = function(rm) {
-        Big['RM'] = parseInt(rm, 10) >= 0 ? rm : Big['RM'];
+        this._rm = !isNaN(Number(rm)) ? Number(rm) : this._rm;
         return this;
     };
 

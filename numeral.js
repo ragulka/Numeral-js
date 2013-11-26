@@ -2126,6 +2126,21 @@
         return this;
     }
 
+    numeral.fn.sqrt = function() {
+        this._value = this._value.sqrt();
+        return this;
+    }
+
+    numeral.fn.mod = numeral.fn.modulo = function (value) {
+        this._value = this._value.mod(value);
+        return this;
+    }
+
+    numeral.fn.round = function(dp, rm) {
+        this._value = this._value.round(dp, rm);
+        return this;
+    }
+
     // UTILITY FUNCTIONS
     numeral.fn.diff = numeral.fn.difference = function (value) {
         return Number(this._value.minus(value).abs().toString());
@@ -2133,6 +2148,34 @@
 
     numeral.fn.cmp = numeral.fn.compare = function(value) {
         return this._value.cmp(value);
+    }
+
+    numeral.fn.eq = numeral.fn.equal = function(value) {
+        return this._value.eq(value);
+    }
+
+    numeral.fn.gt = function(value) {
+        return this._value.gt(value);
+    }
+
+    numeral.fn.gte = function(value) {
+        return this._value.gte(value);
+    }
+
+    numeral.fn.lt = function(value) {
+        return this._value.lt(value);
+    }
+
+    numeral.fn.lte = function(value) {
+        return this._value.lte(value);
+    }
+
+    numeral.fn.toFixed = function(dp) {
+        return Number(this._value.toFixed(dp));
+    }
+
+    numeral.fn.toPrecision = function(sd) {
+        return Number(this._value.toPrecision(sd));
     }
 
     /************************************

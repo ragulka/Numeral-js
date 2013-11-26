@@ -169,4 +169,31 @@ exports.format = {
       test.done();
       
     },
+
+    setFormat: function(test) {
+        var num1, num2;
+        
+        numeral.setFormat('#,##0');
+        num1 = numeral(10000.23);
+        num2 = numeral(10000.23);
+
+        test.strictEqual( numeral(10000.23).format(), '10,000' );
+        test.strictEqual( num1.format(), '10,000' );
+        test.strictEqual( num2.format(), '10,000' );
+
+        num1.setFormat('0');
+        num2.setFormat('0.00');
+
+        test.strictEqual( numeral(10000.23).format(), '10,000' );
+        test.strictEqual( num1.format(), '10000' );
+        test.strictEqual( num2.format(), '10000.23' );
+
+        numeral.setFormat('#0%');
+        test.strictEqual( numeral(0.1).format(), '10%' );
+        test.strictEqual( num1.format(), '10000' );
+        test.strictEqual( num2.format(), '10000.23' );
+
+        test.done();
+
+    }
 };

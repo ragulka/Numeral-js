@@ -1122,9 +1122,35 @@
         },
 
         unformat : function (input, options) {
+            var pattern,
+                prevPattern = '' + currentPattern,
+                result;
+
+            // Get the current pattern
+            pattern = ( this._currentPattern || currentPattern ) || 'decimal';
             options = options || {};
             options.currency = options.currency || locales[currentLocale].currency.local;
-            return unformat(input, options);
+
+            // Look up pattern from locale
+            if (pattern in locales[currentLocale].patterns) {
+                pattern = locales[currentLocale].patterns[pattern];
+            }
+
+            // Parse pattern and format
+            parsePattern(pattern);
+            currentPattern = pattern;
+            result = unformat(input, options);
+
+            // Restore previous pattern, if there was any
+            if (prevPattern) {
+                currentPattern = prevPattern;
+            }
+
+            if (options.set) {
+                this.set( result );
+            }
+
+            return result;
         },
 
         setFormat: function(pattern) {

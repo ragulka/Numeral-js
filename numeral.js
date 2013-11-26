@@ -699,6 +699,7 @@
             gotNegative;
 
         // We don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
+        text = typeof text !== 'undefined' ? String(text) : '';
         text = text.replace(/ /g, '\u00a0');
 
         // Check if we are dealing with time?
@@ -739,21 +740,6 @@
             ret = unformatNumber(text, pos, options.strict);
         }
 
-        // Check if we are dealing with suffixes
-        if (gotPositive) {
-            positiveSuffix = subformatAffix(patterns[currentPattern].positiveSuffix, options);
-            if (text.indexOf(positiveSuffix, pos) !== pos) {
-                return NaN;
-            }
-            pos += positiveSuffix.length;
-        } else if (gotNegative) {
-            negativeSuffix = subformatAffix(patterns[currentPattern].negativeSuffix, options);
-            if (text.indexOf(negativeSuffix, pos) !== pos) {
-                return NaN;
-            }
-            pos += negativeSuffix.length;
-        }
-
         return gotNegative ? -ret : ret;
     }
 
@@ -783,12 +769,13 @@
             regex,
             normalizedText,
             ch,
-            digit;
+            digit,
+            result;
 
         // Check if we are dealing with bytes
-        for (power = 0; power <= byteUnits.length; power++) {
+        for (power = byteUnits.length; power >= 0; power--) {
             if (text.indexOf(byteUnits[power]) > -1) {
-                bytesMultiplier = Math.pow(1024, power + 1);
+                bytesMultiplier = new Big(1024).pow(power).toFixed();
                 break;
             }
         }
@@ -856,8 +843,15 @@
                 if (strict) break;
             }
         }
+
         normalizedText = isNaN(normalizedText) || normalizedText.length < 1 ? 0 : normalizedText;
-        return Number(new Big(normalizedText).div(scale).times(bytesMultiplier).times(powerMultiplier).toString());
+        result = new Big(normalizedText).div(scale).times(bytesMultiplier).times(powerMultiplier).toString();
+        
+        // Round up, if we are dealing with bytes
+        if (bytesMultiplier > 1) { result = Math.ceil(result); }
+
+        // Convert result to number
+        return Number(result);
     }
 
     /**
@@ -1112,10 +1106,12 @@
 
         setFormat: function(pattern) {
             applyPattern(pattern);
+            return this;
         },
 
         zeroFormat: function(format) {
             numeral.zeroFormat(format);
+            return this;
         },
 
         // VALUE

@@ -1136,7 +1136,7 @@
         unformat : function (input, options) {
             var pattern,
                 prevPattern = '' + currentPattern,
-                prevRm = Big['RM'],
+                prevRm = '' + Big['RM'],
                 rm,
                 result;
 
@@ -1274,11 +1274,21 @@
     };
 
     numeral.fn.toFixed = function(dp) {
-        return this._value.toFixed(dp);
+        var prevRm = Big['RM'],
+            result;
+        setRoundingMode(this._rm); 
+        result = this._value.toFixed(dp);
+        setRoundingMode(prevRm);
+        return result;
     };
 
     numeral.fn.toPrecision = function(sd) {
-        return this._value.toPrecision(sd);
+        var prevRm = Big['RM'],
+            result;
+        setRoundingMode(this._rm); 
+        result = this._value.toPrecision(sd);
+        setRoundingMode(prevRm);
+        return result;        
     };
 
     numeral.fn.rm = numeral.fn.roundingMode = function(rm) {

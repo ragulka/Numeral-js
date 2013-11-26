@@ -141,29 +141,27 @@ exports.misc = {
         test.done();
     },
 
-    round: function (test) {
-        var num1, num2;
 
-        // Rounding mode should be applied to instance only, if setting via instance method
-        numeral.rm(0);
-        num1 = numeral();
-        num2 = numeral();
-        test.strictEqual( numeral(0.615).round(2).value(), 0.61 );
-        test.strictEqual( num1.set(0.615).round(2).value(), 0.61 );
-        test.strictEqual( num2.set(0.615).round(2).value(), 0.61 );
+    rm: function (test) {
 
-        num1.rm(1);
-        num2.rm(3);
-        test.strictEqual( numeral(0.615).round(2).value(), 0.61 );
-        test.strictEqual( num1.set(0.615).round(2).value(), 0.62 );
-        test.strictEqual( num2.set(0.615).round(2).value(), 0.62 );
-        test.strictEqual( num2.set(0.615).rm(2).round(2).value(), 0.62 );
-        test.strictEqual( num1.set(0.615).round(2, 1).value(), 0.62 );
+        test.expect(6);
 
-        numeral.rm(1);
+        test.strictEqual( numeral(0.615).toFixed(2), '0.62', 'Default rounding mode should be 1' );
+
+        test.strictEqual( numeral(0.615).rm(0).toFixed(2), '0.61' );
+        test.strictEqual( numeral(0.615).rm(2).toFixed(2), '0.62' );
+        test.strictEqual( numeral(0.615).rm(3).toFixed(2), '0.62' );
+
+        numeral().rm(0);
+        test.strictEqual( numeral(0.615).toFixed(2), '0.62', 'Changing instance rounding mode should not affect global rounding mode' );
+
+        var num1 = numeral(0.615),
+            num2 = numeral(0.615);
+
+        num1.rm(0);
+        test.strictEqual( num2.toFixed(2), '0.62', 'Changing instance rounding mode should not affect other instances' );
 
         test.done();
-
     },
 
 
@@ -171,12 +169,13 @@ exports.misc = {
         test.expect(6);
 
         var tests = [
-                [1.23456,2,'1.23'],
-                [0.567,1,'0.6'],
-                [0.615,2,'0.62'],
-                [-100.99,0,'-101'],
-                [0.3231,2,'0.32'],
-                [0.3,2,'0.30']
+                // num, decimals, result
+                [1.23456,   2,  '1.23'],
+                [0.567,     1,  '0.6'],
+                [0.615,     2,  '0.62'],
+                [-100.99,   0,  '-101'],
+                [0.3231,    2,  '0.32'],
+                [0.3,       2,  '0.30']
             ],
             num;
 

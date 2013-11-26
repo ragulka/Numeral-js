@@ -17,7 +17,7 @@
             // not ideal, but since in Ukrainian it can taken on 
             // different forms (masculine, feminine, neuter)
             // this is all we can do
-            return ''; 
+            return '';
         },
         currency: {
             symbol: '\u20B4'

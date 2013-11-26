@@ -338,7 +338,7 @@
 
     /************************************
         Formatting
-    ************************************/    
+    ************************************/
 
     /**
      * Formats a Number to produce a string.
@@ -674,7 +674,7 @@
             minutes = Math.floor((number - (hours * 60 * 60))/60),
             seconds = Math.round(number - (hours * 60 * 60) - (minutes * 60));
         return hours + ':' + ((minutes < 10) ? '0' + minutes : minutes) + ':' + ((seconds < 10) ? '0' + seconds : seconds);
-    }    
+    }
 
     /**
      * Parses text string to produce a Number.
@@ -738,7 +738,7 @@
         if (text.indexOf(locales[currentLocale].symbols.infinity, pos) === pos) {
             pos += locales[currentLocale].symbols.infinity.length;
             ret = Infinity;
-        } else {          
+        } else {
             ret = unformatNumber(text, pos, options.strict);
         }
 
@@ -789,8 +789,7 @@
                 powerMultiplier = powers[key];
                 break;
             }
-        }       
-
+        }
 
         normalizedText = '';
         for (; pos < text.length; pos++) {
@@ -899,7 +898,7 @@
             seconds = seconds + Number(timeArray[1]);
         }
         return Number(seconds);
-    }    
+    }
 
     /************************************
         Top Level Functions
@@ -1023,7 +1022,7 @@
                 (b === 1) ? 'st' :
                 (b === 2) ? 'nd' :
                 (b === 3) ? 'rd' : 'th';
-        }        
+        }
     });
 
     /************************************
@@ -1058,8 +1057,6 @@
             return numeral(this);
         },
 
-        // FORMATTING
-
         format : function (pattern, options) {
             var prevPattern = '' + currentPattern,
                 prevRm = Big['RM'],
@@ -1092,47 +1089,6 @@
             return result;
         },
 
-        decimal: function (options) {
-            return this.format('decimal', options);
-        },
-
-        currency: function (currency, options) {
-            currency = currency || locales[currentLocale].currency.local;
-            options = options || {};
-
-            if (!inArray( currencies, currency )) {
-                throw new Error('Unknown currency: ' + currency);
-            }
-            options.currency = currency;
-            return this.format('currency', options);
-        },
-
-        percent: function (options) {
-            return this.format('percent', options);
-        },        
-
-        ordinal: function (options) {
-            options = options || {};
-            options.ordinal = true;
-            return this.format(null, options);
-        },
-
-        abbr : function(pattern, options) {
-            options = options || {};
-            options.abbr = true;
-            return this.format(pattern, options);
-        },
-
-        bytes: function(options) {
-            options = options || {};
-            options.bytes = true;            
-            return this.format(null, options);
-        },
-
-        time: function() {
-            return formatTime( this.value() );
-        },
-
         unformat : function (input, options) {
             var pattern,
                 prevPattern = '' + currentPattern,
@@ -1147,7 +1103,7 @@
 
             // Set rounding mode
             rm = options.rm || this._rm;
-            setRoundingMode(rm);            
+            setRoundingMode(rm);
 
             // Look up pattern from locale
             if (pattern in locales[currentLocale].patterns) {
@@ -1172,6 +1128,47 @@
             return result;
         },
 
+        decimal: function (options) {
+            return this.format('decimal', options);
+        },
+
+        currency: function (currency, options) {
+            currency = currency || locales[currentLocale].currency.local;
+            options = options || {};
+
+            if (!inArray( currencies, currency )) {
+                throw new Error('Unknown currency: ' + currency);
+            }
+            options.currency = currency;
+            return this.format('currency', options);
+        },
+
+        percent: function (options) {
+            return this.format('percent', options);
+        },
+
+        ordinal: function (options) {
+            options = options || {};
+            options.ordinal = true;
+            return this.format(null, options);
+        },
+
+        abbr : function(pattern, options) {
+            options = options || {};
+            options.abbr = true;
+            return this.format(pattern, options);
+        },
+
+        bytes: function(options) {
+            options = options || {};
+            options.bytes = true;
+            return this.format(null, options);
+        },
+
+        time: function() {
+            return formatTime( this.value() );
+        },
+
         setFormat: function(pattern) {
             this._currentPattern = pattern;
             return this;
@@ -1181,8 +1178,6 @@
             numeral.zeroFormat(format);
             return this;
         },
-
-        // VALUE
 
         set : function (value) {
             this._value = new Big(value);
@@ -1276,7 +1271,7 @@
     numeral.fn.toFixed = function(dp) {
         var prevRm = Big['RM'],
             result;
-        setRoundingMode(this._rm); 
+        setRoundingMode(this._rm);
         result = this._value.toFixed(dp);
         setRoundingMode(prevRm);
         return result;
@@ -1285,10 +1280,10 @@
     numeral.fn.toPrecision = function(sd) {
         var prevRm = Big['RM'],
             result;
-        setRoundingMode(this._rm); 
+        setRoundingMode(this._rm);
         result = this._value.toPrecision(sd);
         setRoundingMode(prevRm);
-        return result;        
+        return result;
     };
 
     numeral.fn.rm = numeral.fn.roundingMode = function(rm) {

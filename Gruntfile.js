@@ -59,6 +59,7 @@ module.exports = function(grunt) {
                 'undef': true,
                 'sub': true,
                 'strict': false,
+                'trailing': true,
                 'quotmark': 'single'
             }
         }

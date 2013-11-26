@@ -78,11 +78,11 @@
     ************************************/
 
     /**
-     * Apply provided pattern, result are stored in the patterns object.
+     * Parse provided pattern, result are stored in the patterns object.
      *
      * @param {string} pattern String pattern being applied.
      */
-    function applyPattern (pattern) {
+    function parsePattern (pattern) {
 
         // Parse only if parsing results do not exist
         if (!patterns[pattern]) {
@@ -128,8 +128,7 @@
             }
         }
 
-        // Set the current pattern
-        currentPattern = pattern;
+        return patterns[pattern];
     }
 
     /**
@@ -909,7 +908,10 @@
     numeral = function (input, rm) {
         Big['RM'] = rm || Big['RM'];
 
-        if (!currentPattern) { applyPattern(locales[currentLocale].patterns.decimal); }
+        if (!currentPattern) {
+            currentPattern = locales[currentLocale].patterns.decimal;
+            parsePattern(currentPattern);
+        }
 
         if (numeral.isNumeral(input)) {
             input = input.value();
@@ -942,7 +944,8 @@
 
     // Set current format
     numeral.setFormat = function(pattern) {
-        applyPattern(pattern);
+        parsePattern(pattern);
+        currentPattern = pattern;
     };
 
     // This function will load locales and then set the global locale.  If
@@ -1053,10 +1056,10 @@
         // FORMATTING
 
         format : function (pattern, options) {
-            var previousPattern = '' + currentPattern,
+            var prevPattern = '' + currentPattern,
                 result;
 
-            pattern = pattern || (currentPattern || 'decimal');
+            pattern = pattern || ( ( this._currentPattern || currentPattern ) || 'decimal');
             options = options || {};
 
             // Look up pattern from locale
@@ -1064,13 +1067,16 @@
                 pattern = locales[currentLocale].patterns[pattern];
             }
 
-            // Apply pattern and format
-            applyPattern(pattern);
+            // Parse pattern and format
+            parsePattern(pattern);
+            currentPattern = pattern;
             result = format(this.value(), options);
-            // Restore the previous pattern
-            if (previousPattern) {
-                applyPattern(previousPattern);
+
+            // Restore previous pattern, if there was any
+            if (prevPattern) {
+                currentPattern = prevPattern;
             }
+
             return result;
         },
 
@@ -1122,7 +1128,7 @@
         },
 
         setFormat: function(pattern) {
-            numeral.setFormat(pattern);
+            this._currentPattern = pattern;
             return this;
         },
 

@@ -72,7 +72,6 @@
     // Numeral prototype object
     function Numeral (number) {
         this._value = new Big(number);
-        if (!currentPattern) applyPattern(locales[currentLocale].patterns.decimal);
     }
 
     /************************************
@@ -857,7 +856,8 @@
                 if (strict) break;
             }
         }
-        return Number(new Big(parseFloat(normalizedText)).div(scale).times(bytesMultiplier).times(powerMultiplier).toString());
+        normalizedText = isNaN(normalizedText) || normalizedText.length < 1 ? 0 : normalizedText;
+        return Number(new Big(normalizedText).div(scale).times(bytesMultiplier).times(powerMultiplier).toString());
     }
 
     /**
@@ -910,6 +910,8 @@
     ************************************/
 
     numeral = function (input) {
+        if (!currentPattern) applyPattern(locales[currentLocale].patterns.decimal);
+
         if (numeral.isNumeral(input)) {
             input = input.value();
         } else if (input === 0 || typeof input === 'undefined') {
@@ -927,6 +929,11 @@
     // compare numeral object
     numeral.isNumeral = function (obj) {
         return obj instanceof Numeral;
+    };
+
+    // custom zero format
+    numeral.zeroFormat = function(format) {
+        zeroFormat = typeof(format) === 'string' ? format : null;
     };
 
     // This function will load locales and then set the global locale.  If
@@ -1108,7 +1115,7 @@
         },
 
         zeroFormat: function(format) {
-            zeroFormat = typeof(format) === 'string' ? format : null;
+            numeral.zeroFormat(format);
         },
 
         // VALUE
@@ -1202,11 +1209,11 @@
     };
 
     numeral.fn.toFixed = function(dp) {
-        return Number(this._value.toFixed(dp));
+        return this._value.toFixed(dp);
     };
 
     numeral.fn.toPrecision = function(sd) {
-        return Number(this._value.toPrecision(sd));
+        return this._value.toPrecision(sd);
     };
 
     /************************************

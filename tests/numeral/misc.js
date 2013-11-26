@@ -93,31 +93,138 @@ exports.misc = {
     localeData: function(test) {
         test.expect(10);
         
-        var cOld = '$',
-            cNew = '!',
+        var cOld = 'USD',
+            cNew = 'EUR',
             formatTestVal = function() { return numeral('100').format('$0,0') },
-            oldCurrencyVal = cOld + '100',
-            newCurrencyVal = cNew + '100';
+            oldCurrencyVal = '$100',
+            newCurrencyVal = '€100';
         
-        test.strictEqual(numeral.localeData().currency.symbol, cOld, 'Current locale currency is ' + cOld);
-        test.strictEqual(numeral.localeData('en').currency.symbol, cOld, 'English locale currency is ' + cOld);
+        test.strictEqual(numeral.localeData().currency.local, cOld, 'Current locale currency is ' + cOld);
+        test.strictEqual(numeral.localeData('en').currency.local, cOld, 'English locale currency is ' + cOld);
         
-        numeral.localeData().currency.symbol = cNew;
-        test.strictEqual(numeral.localeData().currency.symbol, cNew, 'Current locale currency is changed to ' + cNew);
+        numeral.localeData().currency.local = cNew;
+        test.strictEqual(numeral.localeData().currency.local, cNew, 'Current locale currency is changed to ' + cNew);
         test.strictEqual(formatTestVal(), newCurrencyVal, 'Format uses new currency');
         
-        numeral.localeData().currency.symbol = cOld;
-        test.strictEqual(numeral.localeData().currency.symbol, '$', 'Current locale currency is reset to ' + cOld);
+        numeral.localeData().currency.local = cOld;
+        test.strictEqual(numeral.localeData().currency.local, 'USD', 'Current locale currency is reset to ' + cOld);
         test.strictEqual(formatTestVal(), oldCurrencyVal, 'Format uses old currency');
         
-        numeral.localeData('en').currency.symbol = cNew;
-        test.strictEqual(numeral.localeData().currency.symbol, cNew, 'English locale currency is changed to ' + cNew);
+        numeral.localeData('en').currency.local = cNew;
+        test.strictEqual(numeral.localeData().currency.local, cNew, 'English locale currency is changed to ' + cNew);
         test.strictEqual(formatTestVal(), newCurrencyVal, 'Format uses new currency');
         
-        numeral.localeData('en').currency.symbol = cOld;
-        test.strictEqual(numeral.localeData().currency.symbol, cOld, 'English locale currency is reset to ' + cOld);
+        numeral.localeData('en').currency.local = cOld;
+        test.strictEqual(numeral.localeData().currency.local, cOld, 'English locale currency is reset to ' + cOld);
         test.strictEqual(formatTestVal(), oldCurrencyVal, 'Format uses old currency');
         
+        test.done();
+    },
+
+
+    difference: function (test) {
+        test.expect(4);
+
+        var tests = [
+                [1000,10,990],
+                [0.5,3,2.5],
+                [-100,200,300],
+                [0.3,0.2,0.1]
+            ],
+            num;
+
+        for (var i = 0; i < tests.length; i++) {
+            num = numeral(tests[i][0]);
+            test.strictEqual(num.difference(tests[i][1]), tests[i][2], 'Difference between ' + tests[i][0] + ' and ' + tests[i][1]);
+        }
+
+        test.done();
+    },
+
+
+    toFixed: function (test) {
+        test.expect(6);
+
+        var tests = [
+                [1.23456,2,'1.23'],
+                [0.567,1,'0.6'],
+                [0.615,2,'0.62'],
+                [-100.99,0,'-101'],
+                [0.3231,2,'0.32'],
+                [0.3,2,'0.30']
+            ],
+            num;
+
+        for (var i = 0; i < tests.length; i++) {
+            num = numeral(tests[i][0]);
+            test.strictEqual(num.toFixed(tests[i][1]), tests[i][2], 'toFixed(' + tests[i][1] + ') should be ' + tests[i][2]);
+        }
+
+        test.done();
+    },
+
+
+    toPrecision: function (test) {
+        test.expect(5);
+
+        var tests = [
+                [7,1,'7'],
+                [7,2,'7.0'],
+                [7,3,'7.00'],
+                [-7,3,'-7.00'],
+                [91,4,'91.00']
+            ],
+            num;
+
+        for (var i = 0; i < tests.length; i++) {
+            num = numeral(tests[i][0]);
+            test.strictEqual(num.toPrecision(tests[i][1]), tests[i][2], 'toPrecision(' + tests[i][1] + ') should be ' + tests[i][2]);
+        }
+
+        test.done();
+    },
+
+    eq: function (test) {
+        test.expect(3);
+
+        var tests = [
+                [7,7,true],
+                [0.1,0.100000,true],
+                [-5.1,5.1,false],
+            ],
+            num;
+
+        for (var i = 0; i < tests.length; i++) {
+            num = numeral(tests[i][0]);
+            test.strictEqual(num.eq(tests[i][1]), tests[i][2], 'Equality of ' + tests[i][1] + ' and ' + tests[i][2]);
+        }
+
+        test.done();        
+    },
+
+
+    gt: function (test) {
+        test.ok(numeral(100).gt(99));
+        test.done();
+    },
+
+
+    gte: function (test) {
+        test.ok(numeral(100).gte(100));
+        test.ok(numeral(100).gte(99));
+        test.done();
+    },
+
+
+    lt: function (test) {
+        test.ok(numeral(100).lt(101));
+        test.done();
+    },
+
+
+    lte: function (test) {
+        test.ok(numeral(100).lte(100));
+        test.ok(numeral(100).lte(101));
         test.done();
     }
 };

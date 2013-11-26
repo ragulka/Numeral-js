@@ -1,5 +1,8 @@
 var numeral = require('../../numeral');
 
+// Manipulation is provided by Big.js library, which itself is very well covered with tests.
+// These tests simply serve the purpose to see if the bindings work as expected
+
 exports.manipulate = {
 
     add: function (test) {
@@ -130,6 +133,26 @@ exports.manipulate = {
             num = numeral(tests[i][0]);
             num.sqrt(tests[i][1]);
             test.strictEqual(num.value(), tests[i][2], tests[i][0] + ' % ' + tests[i][1]);
+        }
+
+        test.done();
+    },
+
+    round: function (test) {
+        test.expect(4);
+
+        var tests = [
+                [1.35,1,0,1.3],
+                [1.35,1,1,1.4],
+                [-2.426346,4,2,-2.4263],
+                [0.06922,2,1,0.07],
+            ],
+            num;
+
+        for (var i = 0; i < tests.length; i++) {
+            num = numeral(tests[i][0]);
+            num.round(tests[i][1], tests[i][2]);
+            test.strictEqual(num.value(), tests[i][3], tests[i][0] + ' round(' + tests[i][1] + ',' + tests[i][2] + ')');
         }
 
         test.done();

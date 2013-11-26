@@ -1079,7 +1079,7 @@
 
     // Numeral prototype object
     function Numeral (number) {
-        this._value = number;
+        this._value = new Big(number);
         if (!currentPattern) applyPattern(locales[currentLocale].patterns.decimal);
     }
 
@@ -1390,19 +1390,19 @@
                 if (number >= powers.trillion) {
                     // trillion
                     abbr = abbr + locales[currentLocale].abbreviations.trillion;
-                    number = number / powers.trillion;
+                    number = new Big( number ).divide( powers.trillion ).toString();
                 } else if (number < powers.trillion && number >= powers.billion) {
                     // billion
                     abbr = abbr + locales[currentLocale].abbreviations.billion;
-                    number = number / powers.billion;
+                    number = new Big( number ).divide( powers.billion ).toString();
                 } else if (number < powers.billion && number >= powers.million) {
                     // million
                     abbr = abbr + locales[currentLocale].abbreviations.million;
-                    number = number / powers.million;
+                    number = new Big( number ).divide( powers.million ).toString();
                 } else if (number < powers.million && number >= powers.thousand) {
                     // thousand
                     abbr = abbr + locales[currentLocale].abbreviations.thousand;
-                    number = number / powers.thousand;
+                    number = new Big( number ).divide( powers.thousand ).toString();
                 }
             }
 
@@ -1416,7 +1416,7 @@
                     if (number >= min && number < max) {
                         bytes = bytes + byteUnits[power];
                         if (min > 0) {
-                            number = number / min;
+                            number = new Big( number ).divide( min ).toString();
                         }
                         break;
                     }
@@ -1505,13 +1505,13 @@
 
         // Round the number
         var power = Math.pow(10, maxFracDigits),
-            shiftedNumber = Math.round(number * power),
+            shiftedNumber = new Big( number ).times( power ).round().toString(),
             intValue = number,
             fracValue = 0;
 
         if (isFinite(shiftedNumber)) {
-            intValue = Math.floor(shiftedNumber / power);
-            fracValue = Math.floor(shiftedNumber - intValue * power);
+            intValue = Math.floor(new Big( shiftedNumber ).div( power ).toString());
+            fracValue = Math.floor(new Big(shiftedNumber).minus( new Big(intValue).times(power) ).toString());
         }
 
         var fractionPresent = minFracDigits > 0 || fracValue > 0,
@@ -1521,7 +1521,7 @@
         while (translatableInt > 1E20) {
             // here it goes beyond double precision, add '0' make it look better
             intPart = '0' + intPart;
-            translatableInt = Math.round(translatableInt / 10);
+            translatableInt = Math.round(new Big( translatableInt ).div( 10 ).toString());
         }
         intPart = translatableInt + intPart;
 
@@ -1829,7 +1829,7 @@
                 if (strict) break;
             }
         }
-        return parseFloat(normalizedText) / scale * bytesMultiplier * powerMultiplier;
+        return Number(new Big(parseFloat(normalizedText)).div(scale).times(bytesMultiplier).times(powerMultiplier).toString());
     }
 
     /**
@@ -1993,83 +1993,6 @@
         return false;
     }
 
-    /************************************
-        Floating-point helpers
-    ************************************/
-
-    // The floating-point helper functions and implementation
-    // borrows heavily from sinful.js: http://guipn.github.io/sinful.js/
-
-    /**
-     * Array.prototype.reduce for browsers that don't support it
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce#Compatibility
-     */
-    if ('function' !== typeof Array.prototype.reduce) {
-      Array.prototype.reduce = function(callback, opt_initialValue){
-        'use strict';
-        if (null === this || 'undefined' === typeof this) {
-          // At the moment all modern browsers, that support strict mode, have
-          // native implementation of Array.prototype.reduce. For instance, IE8
-          // does not support strict mode, so this check is actually useless.
-          throw new TypeError(
-              'Array.prototype.reduce called on null or undefined');
-        }
-        if ('function' !== typeof callback) {
-          throw new TypeError(callback + ' is not a function');
-        }
-        var index, value,
-            length = this.length >>> 0,
-            isValueSet = false;
-        if (1 < arguments.length) {
-          value = opt_initialValue;
-          isValueSet = true;
-        }
-        for (index = 0; length > index; ++index) {
-          if (this.hasOwnProperty(index)) {
-            if (isValueSet) {
-              value = callback(value, this[index], index, this);
-            }
-            else {
-              value = this[index];
-              isValueSet = true;
-            }
-          }
-        }
-        if (!isValueSet) {
-          throw new TypeError('Reduce of empty array with no initial value');
-        }
-        return value;
-      };
-    }
-
-    
-    /**
-     * Computes the multiplier necessary to make x >= 1,
-     * effectively eliminating miscalculations caused by
-     * finite precision.
-     */
-    function multiplier(x) {
-        var parts = x.toString().split('.');
-        if (parts.length < 2) {
-            return 1;
-        }
-        return Math.pow(10, parts[1].length);
-    }
-
-    /**
-     * Given a variable number of arguments, returns the maximum
-     * multiplier that must be used to normalize an operation involving
-     * all of them.
-     */
-    function correctionFactor() {
-        var args = Array.prototype.slice.call(arguments);
-        return args.reduce(function (prev, next) {
-            var mp = multiplier(prev),
-                mn = multiplier(next);
-        return mp > mn ? mp : mn;
-        }, -Infinity);
-    }        
-
 
     /************************************
         Numeral Prototype
@@ -2156,57 +2079,40 @@
         },
 
         value : function () {
-            return this._value;
+            return this._value.toString();
         },
 
         valueOf : function () {
-            return this._value;
+            return this.value();
         },
 
         set : function (value) {
-            this._value = Number(value);
+            this._value = new Big(value);
             return this;
         },
 
         add : function (value) {
-            var corrFactor = correctionFactor.call(null, this._value, value);
-            function cback(accum, curr, currI, O) {
-                return accum + corrFactor * curr;
-            }
-            this._value = [this._value, value].reduce(cback, 0) / corrFactor;
+            this._value = this._value.plus(value);
             return this;
         },
 
         subtract : function (value) {
-            var corrFactor = correctionFactor.call(null, this._value, value);
-            function cback(accum, curr, currI, O) {
-                return accum - corrFactor * curr;
-            }
-            this._value = [value].reduce(cback, this._value * corrFactor) / corrFactor;            
+            this._value = this._value.minus(value);
             return this;
         },
 
         multiply : function (value) {
-            function cback(accum, curr, currI, O) {
-                var corrFactor = correctionFactor(accum, curr);
-                return (accum * corrFactor) * (curr * corrFactor) /
-                    (corrFactor * corrFactor);
-            }
-            this._value = [this._value, value].reduce(cback, 1);
+            this._value = this._value.times(value);
             return this;
         },
 
         divide : function (value) {
-            function cback(accum, curr, currI, O) {
-                var corrFactor = correctionFactor(accum, curr);
-                return (accum * corrFactor) / (curr * corrFactor);
-            }
-            this._value = [this._value, value].reduce(cback);            
+            this._value = this._value.div(value);
             return this;
         },
 
         difference : function (value) {
-            return Math.abs(numeral(this._value).subtract(value).value());
+            return this._value.minus(value).abs().toString();
         }
 
     };

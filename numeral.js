@@ -90,6 +90,8 @@
         // Parse only if parsing results do not exist
         if (!patterns[pattern]) {
             var pos = [0],
+                trunkStart,
+                trunkLen,
                 result = patterns[pattern] = {
                     maxIntDigits: 40,
                     minIntDigits: 1,
@@ -109,13 +111,13 @@
                 };
 
             result.positivePrefix = parseAffix(pattern, pos);
-            var trunkStart = pos[0];
+            trunkStart = pos[0];
             parseTrunk(pattern, pos);
-            var trunkLen = pos[0] - trunkStart;
+            trunkLen = pos[0] - trunkStart;
             result.positiveSuffix = parseAffix(pattern, pos);
             
             if (pos[0] < pattern.length &&
-                pattern.charAt(pos[0]) == SEPARATOR) {
+                pattern.charAt(pos[0]) === SEPARATOR) {
                 pos[0]++;
                 result.negativePrefix = parseAffix(pattern, pos);
                 // we assume this part is identical to positive part.
@@ -143,16 +145,17 @@
      * @return {string} Affix received from parsing.
      */
     function parseAffix (pattern, pos) {
-        var affix = '';
-        var inQuote = false;
-        var len = pattern.length;
-        var result = patterns[pattern];
+        var affix = '',
+            inQuote = false,
+            len = pattern.length,
+            result = patterns[pattern],
+            ch;
 
         for (; pos[0] < len; pos[0]++) {
-            var ch = pattern.charAt(pos[0]);
-            if (ch == QUOTE) {
+            ch = pattern.charAt(pos[0]);
+            if (ch === QUOTE) {
                 if (pos[0] + 1 < len &&
-                    pattern.charAt(pos[0] + 1) == QUOTE) {
+                    pattern.charAt(pos[0] + 1) === QUOTE) {
                     pos[0]++;
                     affix += '\''; // 'don''t'
                 } else {
@@ -179,15 +182,15 @@
                         affix += CURRENCY;
                         break;
                     case PERCENT:
-                        if (result.multiplier != 1) {
-                            throw Error('Too many percent/permill');
+                        if (result.multiplier !== 1) {
+                            throw new Error('Too many percent/permill');
                         }
                         result.multiplier = 100;
                         affix += ch;
                         break;
                     case PERMILLE:
-                        if (result.multiplier != 1) {
-                            throw Error('Too many percent/permill');
+                        if (result.multiplier !== 1) {
+                            throw new Error('Too many percent/permill');
                         }
                         result.multiplier = 1000;
                         affix += ch;
@@ -209,18 +212,22 @@
      *     parsing position.
      */
     function parseTrunk (pattern, pos) {
-        var decimalPos = -1;
-        var digitLeftCount = 0;
-        var zeroDigitCount = 0;
-        var digitRightCount = 0;
-        var groupingCount = -1;
-        var groupingCount2 = -1;
+        var decimalPos = -1,
+            digitLeftCount = 0,
+            zeroDigitCount = 0,
+            digitRightCount = 0,
+            groupingCount = -1,
+            groupingCount2 = -1,
+            result = patterns[pattern],
+            len = pattern.length,
+            loop = true,
+            ch,
+            n,
+            totalDigits,
+            effectiveDecimalPos;
 
-        var result = patterns[pattern];
-
-        var len = pattern.length;
-        for (var loop = true; pos[0] < len && loop; pos[0]++) {
-            var ch = pattern.charAt(pos[0]);
+        for (loop = true; pos[0] < len && loop; pos[0]++) {
+            ch = pattern.charAt(pos[0]);
             switch (ch) {
                 case DIGIT:
                     if (zeroDigitCount > 0) {
@@ -234,7 +241,7 @@
                     break;
                 case ZERO:
                     if (digitRightCount > 0) {
-                        throw Error('Unexpected "0" in pattern "' + pattern + '"');
+                        throw new Error('Unexpected "0" in pattern "' + pattern + '"');
                     }
                     zeroDigitCount++;
                     if (groupingCount >= 0 && decimalPos < 0) {
@@ -247,37 +254,35 @@
                     break;
                 case DECIMAL:
                     if (decimalPos >= 0) {
-                        throw Error('Multiple decimal separators in pattern "' +
+                        throw new Error('Multiple decimal separators in pattern "' +
                             pattern + '"');
                     }
                     decimalPos = digitLeftCount + zeroDigitCount + digitRightCount;
                     break;
                 case EXPONENT:
                     if (result.useExpNotation) {
-                        throw Error('Multiple exponential symbols in pattern "' +
+                        throw new Error('Multiple exponential symbols in pattern "' +
                             pattern + '"');
                     }
                     result.useExpNotation = true;
                     result.minExpDigits = 0;
 
                     // exponent pattern can have a optional '+'.
-                    if ((pos[0] + 1) < len && pattern.charAt(pos[0] + 1) ==
-                        PLUS) {
+                    if ((pos[0] + 1) < len && pattern.charAt(pos[0] + 1) === PLUS) {
                         pos[0]++;
                         result.useSignForPositiveExp = true;
                     }
 
                     // Use lookahead to parse out the exponential part
                     // of the pattern, then jump into phase 2.
-                    while ((pos[0] + 1) < len && pattern.charAt(pos[0] + 1) ==
-                        ZERO) {
+                    while ((pos[0] + 1) < len && pattern.charAt(pos[0] + 1) === ZERO) {
                         pos[0]++;
                         result.minExpDigits++;
                     }
 
                     if ((digitLeftCount + zeroDigitCount) < 1 ||
                         result.minExpDigits < 1) {
-                        throw Error('Malformed exponential pattern "' + pattern + '"');
+                        throw new Error('Malformed exponential pattern "' + pattern + '"');
                     }
                     loop = false;
                     break;
@@ -288,10 +293,10 @@
             }
         }
 
-        if (zeroDigitCount == 0 && digitLeftCount > 0 && decimalPos >= 0) {
+        if (zeroDigitCount === 0 && digitLeftCount > 0 && decimalPos >= 0) {
             // Handle '###.###' and '###.' and '.###'
-            var n = decimalPos;
-            if (n == 0) { // Handle '.###'
+            n = decimalPos;
+            if (n === 0) { // Handle '.###'
                 n++;
             }
             digitRightCount = digitLeftCount - n;
@@ -303,10 +308,10 @@
         if (decimalPos < 0 && digitRightCount > 0 ||
             decimalPos >= 0 && (decimalPos < digitLeftCount ||
                 decimalPos > digitLeftCount + zeroDigitCount) ||
-            groupingCount == 0) {
-            throw Error('Malformed pattern "' + pattern + '"');
+            groupingCount === 0) {
+            throw new Error('Malformed pattern "' + pattern + '"');
         }
-        var totalDigits = digitLeftCount + zeroDigitCount + digitRightCount;
+        totalDigits = digitLeftCount + zeroDigitCount + digitRightCount;
 
         result.maxFracDigits = decimalPos >= 0 ? totalDigits - decimalPos : 0;
         if (decimalPos >= 0) {
@@ -319,21 +324,20 @@
         // The effectiveDecimalPos is the position the decimal is at or would be at
         // if there is no decimal. Note that if decimalPos<0, then digitTotalCount ==
         // digitLeftCount + zeroDigitCount.
-        var effectiveDecimalPos = decimalPos >= 0 ? decimalPos : totalDigits;
+        effectiveDecimalPos = decimalPos >= 0 ? decimalPos : totalDigits;
         result.minIntDigits = effectiveDecimalPos - digitLeftCount;
         if (result.useExpNotation) {
             result.maxIntDigits = digitLeftCount + result.minIntDigits;
 
             // in exponential display, we need to at least show something.
-            if (result.maxFracDigits == 0 && result.minIntDigits == 0) {
+            if (result.maxFracDigits === 0 && result.minIntDigits === 0) {
                 result.minIntDigits = 1;
             }
         }
 
         result.groupingSize = Math.max(0, groupingCount);
         result.groupingSize2 = Math.max(0, groupingCount2);
-        result.decimalSeparatorAlwaysShown = decimalPos == 0 ||
-            decimalPos == totalDigits;
+        result.decimalSeparatorAlwaysShown = decimalPos === 0 || decimalPos === totalDigits;
     }
 
     /************************************
@@ -347,6 +351,15 @@
      * @return {string} The formatted number string.
      */
     function format (number, options) {
+        var parts = [],
+            isNegative,
+            abbr = '',
+            bytes = '',
+            ordinal = '',
+            power,
+            min,
+            max;
+
         if (isNaN(number)) {
             return locales[currentLocale].symbols.nan;
         }
@@ -358,10 +371,9 @@
         options = options || {};
         options.currency = options.currency || locales[currentLocale].currency.local;
 
-        var parts = [];
         // in icu code, it is commented that certain computation need to keep the
         // negative sign for 0.
-        var isNegative = number < 0.0 || number == 0.0 && 1 / number < 0.0;
+        isNegative = number < 0.0 || number === 0.0 && 1 / number < 0.0;
 
         parts.push(subformatAffix( isNegative ? patterns[currentPattern].negativePrefix : patterns[currentPattern].positivePrefix, options));
 
@@ -375,7 +387,6 @@
             // If we are dealing with abbreviations, select the correct
             // abbreviation and manipulate the number
             if (options.abbr) {
-                var abbr = '';
                 // When using abbreviations, minimum requried decimals should be 0
                 options.minFracDigits = 0;
 
@@ -400,7 +411,6 @@
 
             // See if we are formatting bytes
             if (options.bytes) {
-                var bytes = '';
                 for (power = 0; power <= byteUnits.length; power++) {
                     min = Math.pow(1024, power);
                     max = Math.pow(1024, power+1);
@@ -417,13 +427,15 @@
 
             // See if ordinal is wanted
             if (options.ordinal) {
-                var ordinal = '' + locales[currentLocale].ordinal(number);
+                ordinal = '' + locales[currentLocale].ordinal(number);
             }
 
             // Format the number part
-            patterns[currentPattern].useExponentialNotation ?
-                subformatExponential(number, parts) :
+            if (patterns[currentPattern].useExponentialNotation) {
+                subformatExponential(number, parts);
+            } else {
                 subformatFixed(number, patterns[currentPattern].minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
+            }
 
             // Append the abbreviation
             if (options.abbr && abbr)
@@ -453,11 +465,15 @@
     function subformatAffix (affix, options) {
         var len = affix.length,
             currency = options.currency,
-            parts = [];
+            parts = [],
+            ch,
+            symbol,
+            i;
+
         if (!affix.length) return '';
 
         for (i = 0; i < len; i++) {
-            var ch = affix.charAt(i);
+            ch = affix.charAt(i);
             switch (ch) {
                 case PERCENT:
                     parts.push(locales[currentLocale].symbols.percent);
@@ -466,7 +482,7 @@
                     parts.push(locales[currentLocale].symbols.permille);
                 break;
                 case CURRENCY:
-                    var symbol = currency;
+                    symbol = currency;
                     if (!options.globalStyle && locales[currentLocale].currency.symbols && locales[currentLocale].currency.symbols.hasOwnProperty(currency)) {
                         symbol = locales[currentLocale].currency.symbols[currency];
                     }
@@ -491,6 +507,7 @@
      *     This function will add its formatted pieces to the array.
      */
     function subformatFixed (number, minIntDigits, minFracDigits, maxFracDigits, parts) {
+        // Determine minimum and maximum digits
         minFracDigits = minFracDigits >= 0 ? minFracDigits : patterns[currentPattern].minFracDigits;
         maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : patterns[currentPattern].maxFracDigits;
         if (maxFracDigits < minFracDigits) maxFracDigits = minFracDigits;
@@ -499,46 +516,51 @@
         var power = Math.pow(10, maxFracDigits),
             shiftedNumber = new Big( number ).times( power ).round().toString(),
             intValue = number,
-            fracValue = 0;
+            fracValue = 0,
+            fractionPresent,
+            intPart = '',
+            translatableInt = intValue,
+            decimal = locales[currentLocale].symbols.decimal,
+            grouping = locales[currentLocale].symbols.group,
+            zeroCode = enforceAsciiDigits ? 48 /* ascii '0' */ : locales[currentLocale].symbols.zero.charCodeAt(0),
+            digitLen,
+            i,
+            cPos,
+            fracPart,
+            fracLen;
 
         if (isFinite(shiftedNumber)) {
             intValue = Math.floor(new Big( shiftedNumber ).div( power ).toString());
             fracValue = Math.floor(new Big(shiftedNumber).minus( new Big(intValue).times(power) ).toString());
         }
 
-        var fractionPresent = minFracDigits > 0 || fracValue > 0,
-            intPart = '',
-            translatableInt = intValue;
+        fractionPresent = minFracDigits > 0 || fracValue > 0;
 
         while (translatableInt > 1E20) {
             // here it goes beyond double precision, add '0' make it look better
             intPart = '0' + intPart;
             translatableInt = Math.round(new Big( translatableInt ).div( 10 ).toString());
         }
-        intPart = translatableInt + intPart;
 
-        var decimal = locales[currentLocale].symbols.decimal,
-            grouping = locales[currentLocale].symbols.group,
-            zeroCode = enforceAsciiDigits ?
-                48 /* ascii '0' */ :
-                locales[currentLocale].symbols.zero.charCodeAt(0),
-            digitLen = intPart.length;
+        intPart = translatableInt + intPart;
+        digitLen = intPart.length;
+
 
         if (intValue > 0 || minIntDigits > 0) {
-            for (var i = digitLen; i < minIntDigits; i++) {
+            for (i = digitLen; i < minIntDigits; i++) {
                 parts.push(String.fromCharCode(zeroCode));
             }
 
-            for (var i = 0; i < digitLen; i++) {
+            for (i = 0; i < digitLen; i++) {
                 parts.push(String.fromCharCode(zeroCode + intPart.charAt(i) * 1));
-                var cPos = digitLen - i;
+                cPos = digitLen - i;
 
                 if (cPos > 1 && patterns[currentPattern].groupingSize > 0) {
                     if (patterns[currentPattern].groupingSize2 > 0 && cPos > patterns[currentPattern].groupingSize &&
-                        (cPos - patterns[currentPattern].groupingSize) % patterns[currentPattern].groupingSize2 == 1) {
+                        (cPos - patterns[currentPattern].groupingSize) % patterns[currentPattern].groupingSize2 === 1) {
                         parts.push(grouping);
-                    } else if (patterns[currentPattern].groupingSize2 == 0 &&
-                        cPos % patterns[currentPattern].groupingSize == 1) {
+                    } else if (patterns[currentPattern].groupingSize2 === 0 &&
+                        cPos % patterns[currentPattern].groupingSize === 1) {
                         parts.push(grouping);
                     }
                 }
@@ -554,14 +576,14 @@
             parts.push(decimal);
         }
 
-        var fracPart = '' + (fracValue + power);
-        var fracLen = fracPart.length;
-        while (fracPart.charAt(fracLen - 1) == '0' &&
+        fracPart = '' + (fracValue + power);
+        fracLen = fracPart.length;
+        while (fracPart.charAt(fracLen - 1) === '0' &&
             fracLen > minFracDigits + 1) {
             fracLen--;
         }
 
-        for (var i = 1; i < fracLen; i++) {
+        for (i = 1; i < fracLen; i++) {
             parts.push(String.fromCharCode(zeroCode + fracPart.charAt(i) * 1));
         }
     }
@@ -575,6 +597,10 @@
      * @private
      */
     function addExponentPart (exponent, parts) {
+        var exponentDigits = '' + exponent,
+            zeroChar = enforceAsciiDigits ? '0' : locales[currentLocale].symbols.zero,
+            i;
+
         parts.push(locales[currentLocale].symbols.exponential);
 
         if (exponent < 0) {
@@ -584,10 +610,7 @@
             parts.push(locales[currentLocale].symbols.plus);
         }
 
-        var exponentDigits = '' + exponent,
-            zeroChar = enforceAsciiDigits ? '0' : locales[currentLocale].symbols.zero;
-        
-        for (var i = exponentDigits.length; i < patterns[currentPattern].minExpDigits; i++) {
+        for (i = exponentDigits.length; i < patterns[currentPattern].minExpDigits; i++) {
             parts.push(zeroChar);
         }
         parts.push(exponentDigits);
@@ -602,16 +625,17 @@
      * @private
      */
     function subformatExponential (number, minFracDigits, maxFracDigits, parts) {
-        if (number == 0.0) {
+        if (number === 0.0) {
             subformatFixed(number, patterns[currentPattern].minIntDigits, minFracDigits, maxFracDigits, parts);
             addExponentPart(0, parts);
             return;
         }
 
-        var exponent = Math.floor(Math.log(number) / Math.log(10));
+        var exponent = Math.floor(Math.log(number) / Math.log(10)),
+            minIntDigits = patterns[currentPattern].minIntDigits;
+        
         number /= Math.pow(10, exponent);
 
-        var minIntDigits = patterns[currentPattern].minIntDigits;
         if (patterns[currentPattern].maxIntDigits > 1 &&
             patterns[currentPattern].maxIntDigits > patterns[currentPattern].minIntDigits) {
             // A repeating range is defined; adjust to it as follows.
@@ -619,7 +643,7 @@
             // -3,-4,-5=>-6, etc. This takes into account that the
             // exponent we have here is off by one from what we expect;
             // it is for the format 0.MMMMMx10^n.
-            while ((exponent % patterns[currentPattern].maxIntDigits) != 0) {
+            while ((exponent % patterns[currentPattern].maxIntDigits) !== 0) {
                 number *= 10;
                 exponent--;
             }
@@ -667,7 +691,13 @@
      */
     function unformat (text, options) {
         var pos = 0,
-            ret = NaN;
+            ret = NaN,
+            positivePrefix,
+            negativePrefix,
+            positiveSuffix,
+            negativeSuffix,
+            gotPositive,
+            gotNegative;
 
         // We don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
         text = text.replace(/ /g, '\u00a0');
@@ -682,10 +712,10 @@
         }
 
         // Check if we are dealing with positive or negative prefixes
-        var positivePrefix = subformatAffix(patterns[currentPattern].positivePrefix, options),
-            negativePrefix = subformatAffix(patterns[currentPattern].negativePrefix, options),
-            gotPositive = text.indexOf(positivePrefix) == pos,
-            gotNegative = text.indexOf(negativePrefix) == pos;
+        positivePrefix = subformatAffix(patterns[currentPattern].positivePrefix, options);
+        negativePrefix = subformatAffix(patterns[currentPattern].negativePrefix, options);
+        gotPositive = text.indexOf(positivePrefix) === pos;
+        gotNegative = text.indexOf(negativePrefix) === pos;
 
         // Check for the longest match of the two
         if (gotPositive && gotNegative) {
@@ -703,7 +733,7 @@
         }
 
         // Process digits or Infinity, find decimal position
-        if (text.indexOf(locales[currentLocale].symbols.infinity, pos) == pos) {
+        if (text.indexOf(locales[currentLocale].symbols.infinity, pos) === pos) {
             pos += locales[currentLocale].symbols.infinity.length;
             ret = Infinity;
         } else {          
@@ -712,14 +742,14 @@
 
         // Check if we are dealing with suffixes
         if (gotPositive) {
-            var positiveSuffix = subformatAffix(patterns[currentPattern].positiveSuffix, options);
-            if (!(text.indexOf(positiveSuffix, pos) == pos)) {
+            positiveSuffix = subformatAffix(patterns[currentPattern].positiveSuffix, options);
+            if (text.indexOf(positiveSuffix, pos) !== pos) {
                 return NaN;
             }
             pos += positiveSuffix.length;
         } else if (gotNegative) {
-            var negativeSuffix = subformatAffix(patterns[currentPattern].negativeSuffix, options);
-            if (!(text.indexOf(negativeSuffix, pos) == pos)) {
+            negativeSuffix = subformatAffix(patterns[currentPattern].negativeSuffix, options);
+            if (text.indexOf(negativeSuffix, pos) !== pos) {
                 return NaN;
             }
             pos += negativeSuffix.length;
@@ -748,10 +778,16 @@
             powerMultiplier = 1,
             decimal = locales[currentLocale].symbols.decimal,
             grouping = locales[currentLocale].symbols.group,
-            expChar = locales[currentLocale].symbols.exponential;
+            expChar = locales[currentLocale].symbols.exponential,
+            power,
+            key,
+            regex,
+            normalizedText,
+            ch,
+            digit;
 
         // Check if we are dealing with bytes
-        for (var power = 0; power <= byteUnits.length; power++) {
+        for (power = 0; power <= byteUnits.length; power++) {
             if (text.indexOf(byteUnits[power]) > -1) {
                 bytesMultiplier = Math.pow(1024, power + 1);
                 break;
@@ -759,8 +795,8 @@
         }
 
         // Check if we are dealing with abbreviations
-        for (var key in locales[currentLocale].abbreviations) {
-            var regex = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations[key] + '(?:\\)?)?$');
+        for (key in locales[currentLocale].abbreviations) {
+            regex = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations[key] + '(?:\\)?)?$');
             if (text.match(regex)) {
                 powerMultiplier = powers[key];
                 break;
@@ -768,21 +804,21 @@
         }       
 
 
-        var normalizedText = '';
+        normalizedText = '';
         for (; pos < text.length; pos++) {
-            var ch = text.charAt(pos);
-            var digit = getDigit(ch);
+            ch = text.charAt(pos);
+            digit = getDigit(ch);
             if (digit >= 0 && digit <= 9) {
                 normalizedText += digit;
                 sawDigit = true;
-            } else if (ch == decimal.charAt(0)) {
+            } else if (ch === decimal.charAt(0)) {
                 if (sawDecimal || sawExponent) {
                     break;
                 }
                 normalizedText += '.';
                 sawDecimal = true;
-            } else if (ch == grouping.charAt(0) &&
-                ('\u00a0' != grouping.charAt(0) ||
+            } else if (ch === grouping.charAt(0) &&
+                ('\u00a0' !== grouping.charAt(0) ||
                     pos + 1 < text.length &&
                     getDigit(text.charAt(pos + 1)) >= 0)) {
                 // Got a grouping character here. When grouping character is nbsp, need
@@ -791,16 +827,16 @@
                     break;
                 }
                 continue;
-            } else if (ch == expChar.charAt(0)) {
+            } else if (ch === expChar.charAt(0)) {
                 if (sawExponent) {
                     break;
                 }
                 normalizedText += 'E';
                 sawExponent = true;
-            } else if (ch == '+' || ch == '-') {
+            } else if (ch === '+' || ch === '-') {
                 normalizedText += ch;
-            } else if (ch == locales[currentLocale].symbols.percent.charAt(0)) {
-                if (scale != 1) {
+            } else if (ch === locales[currentLocale].symbols.percent.charAt(0)) {
+                if (scale !== 1) {
                     break;
                 }
                 scale = 100;
@@ -808,8 +844,8 @@
                     pos++; // eat this character if parse end here
                     break;
                 }
-            } else if (ch == locales[currentLocale].symbols.permille.charAt(0)) {
-                if (scale != 1) {
+            } else if (ch === locales[currentLocale].symbols.permille.charAt(0)) {
+                if (scale !== 1) {
                     break;
                 }
                 scale = 1000;
@@ -832,12 +868,13 @@
      * @return {number} The digit value, or -1 on error.
      */
     function getDigit (ch) {
-        var code = ch.charCodeAt(0);
+        var code = ch.charCodeAt(0),
+            zeroCode = locales[currentLocale].symbols.zero.charCodeAt(0);
+            
         // between '0' to '9'
         if (48 <= code && code < 58) {
             return code - 48;
         } else {
-            var zeroCode = locales[currentLocale].symbols.zero.charCodeAt(0);
             return zeroCode <= code && code < zeroCode + 10 ? code - zeroCode : -1;
         }
     }
@@ -979,8 +1016,8 @@
     }
 
     function inArray(array, value) {
-        for (i=0; i < array.length; i++) {
-            if (array[i] == value) return true;
+        for (var i = 0; i < array.length; i++) {
+            if (array[i] === value) return true;
         }
         return false;
     }
@@ -1000,6 +1037,9 @@
         // FORMATTING
 
         format : function (pattern, options) {
+            var previousPattern = '' + currentPattern,
+                result;
+
             pattern = pattern || (currentPattern || 'decimal');
             options = options || {};
 
@@ -1008,12 +1048,11 @@
                 pattern = locales[currentLocale].patterns[pattern];
             }
 
-            var previousPattern = '' + currentPattern;
             // Apply pattern and format
             applyPattern(pattern);
-            var result = format(this.value(), options);
+            result = format(this.value(), options);
             // Restore the previous pattern
-            applyPattern(previousPattern);
+            if (previousPattern) applyPattern(previousPattern);
             return result;
         },
 
@@ -1026,7 +1065,7 @@
             options = options || {};
 
             if (!inArray( currencies, currency )) {
-                throw Error('Unknown currency: ' + currency);
+                throw new Error('Unknown currency: ' + currency);
             }
             options.currency = currency;
             return this.format('currency', options);
@@ -1079,96 +1118,96 @@
             return this;
         }
 
-    }
+    };
 
     // GETTING VALUE
 
     numeral.fn.toString = function() {
         return this._value.toString();
-    }
+    };
 
     numeral.fn.value = numeral.fn.valueOf = function() {
         return Number(this.toString());
-    }
+    };
 
     // MANIPULATIONS 
 
     numeral.fn.plus = numeral.fn.add = function (value) {
         this._value = this._value.plus(value);
         return this;
-    }
+    };
 
     numeral.fn.minus = numeral.fn.subtract = function (value) {
         this._value = this._value.minus(value);
         return this;
-    }
+    };
 
     numeral.fn.times = numeral.fn.multiply = function (value) {
         this._value = this._value.times(value);
         return this;
-    }
+    };
 
     numeral.fn.div = numeral.fn.divide = function (value) {
         this._value = this._value.div(value);
         return this;
-    }
+    };
 
     numeral.fn.pow = numeral.fn.power = function (value) {
         this._value = this._value.pow(value);
         return this;
-    }
+    };
 
     numeral.fn.sqrt = function() {
         this._value = this._value.sqrt();
         return this;
-    }
+    };
 
     numeral.fn.mod = numeral.fn.modulo = function (value) {
         this._value = this._value.mod(value);
         return this;
-    }
+    };
 
     numeral.fn.round = function(dp, rm) {
         this._value = this._value.round(dp, rm);
         return this;
-    }
+    };
 
     // UTILITY FUNCTIONS
     numeral.fn.diff = numeral.fn.difference = function (value) {
         return Number(this._value.minus(value).abs().toString());
-    }
+    };
 
     numeral.fn.cmp = numeral.fn.compare = function(value) {
         return this._value.cmp(value);
-    }
+    };
 
     numeral.fn.eq = numeral.fn.equal = function(value) {
         return this._value.eq(value);
-    }
+    };
 
     numeral.fn.gt = function(value) {
         return this._value.gt(value);
-    }
+    };
 
     numeral.fn.gte = function(value) {
         return this._value.gte(value);
-    }
+    };
 
     numeral.fn.lt = function(value) {
         return this._value.lt(value);
-    }
+    };
 
     numeral.fn.lte = function(value) {
         return this._value.lte(value);
-    }
+    };
 
     numeral.fn.toFixed = function(dp) {
         return Number(this._value.toFixed(dp));
-    }
+    };
 
     numeral.fn.toPrecision = function(sd) {
         return Number(this._value.toPrecision(sd));
-    }
+    };
 
     /************************************
         Exposing Numeral

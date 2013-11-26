@@ -2005,6 +2005,8 @@
             return numeral(this);
         },
 
+        // FORMATTING
+
         format : function (pattern, options) {
             pattern = pattern || (currentPattern || 'decimal');
             options = options || {};
@@ -2078,44 +2080,60 @@
             zeroFormat = typeof(format) === 'string' ? format : null;
         },
 
-        value : function () {
-            return this._value.toString();
-        },
-
-        valueOf : function () {
-            return this.value();
-        },
+        // VALUE
 
         set : function (value) {
             this._value = new Big(value);
             return this;
-        },
-
-        add : function (value) {
-            this._value = this._value.plus(value);
-            return this;
-        },
-
-        subtract : function (value) {
-            this._value = this._value.minus(value);
-            return this;
-        },
-
-        multiply : function (value) {
-            this._value = this._value.times(value);
-            return this;
-        },
-
-        divide : function (value) {
-            this._value = this._value.div(value);
-            return this;
-        },
-
-        difference : function (value) {
-            return this._value.minus(value).abs().toString();
         }
 
-    };
+    }
+
+    // GETTING VALUE
+
+    numeral.fn.toString = function() {
+        return this._value.toString();
+    }
+
+    numeral.fn.value = numeral.fn.valueOf = function() {
+        return Number(this.toString());
+    }
+
+    // MANIPULATIONS 
+
+    numeral.fn.plus = numeral.fn.add = function (value) {
+        this._value = this._value.plus(value);
+        return this;
+    }
+
+    numeral.fn.minus = numeral.fn.subtract = function (value) {
+        this._value = this._value.minus(value);
+        return this;
+    }
+
+    numeral.fn.times = numeral.fn.multiply = function (value) {
+        this._value = this._value.times(value);
+        return this;
+    }
+
+    numeral.fn.div = numeral.fn.divide = function (value) {
+        this._value = this._value.div(value);
+        return this;
+    }
+
+    numeral.fn.pow = numeral.fn.power = function (value) {
+        this._value = this._value.pow(value);
+        return this;
+    }
+
+    // UTILITY FUNCTIONS
+    numeral.fn.diff = numeral.fn.difference = function (value) {
+        return Number(this._value.minus(value).abs().toString());
+    }
+
+    numeral.fn.cmp = numeral.fn.compare = function(value) {
+        return this._value.cmp(value);
+    }
 
     /************************************
         Exposing Numeral

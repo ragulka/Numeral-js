@@ -930,6 +930,11 @@
         zeroFormat = typeof(format) === 'string' ? format : null;
     };
 
+    // Set current format
+    numeral.setFormat = function(pattern) {
+        applyPattern(pattern);
+    };
+
     // This function will load locales and then set the global locale.  If
     // no arguments are passed in, it will simply return the current global
     // locale key.
@@ -1105,7 +1110,7 @@
         },
 
         setFormat: function(pattern) {
-            applyPattern(pattern);
+            numeral.setFormat(pattern);
             return this;
         },
 

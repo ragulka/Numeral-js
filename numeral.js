@@ -1029,20 +1029,70 @@
         Helpers
     ************************************/
 
-    function loadLocale(key, values) {
+    function loadLocale (key, values) {
         locales[key] = values;
     }
 
-    function inArray(array, value) {
+    function inArray (array, value) {
         for (var i = 0; i < array.length; i++) {
             if (array[i] === value) { return true; }
         }
         return false;
     }
 
-    function setRoundingMode(rm) {
+    function setRoundingMode (rm) {
         Big['RM'] = !isNaN(Number(rm)) ? Number(rm) : Big['RM'];
         return Big['RM'];
+    }
+
+    // Helper function to call Big's function while setting the rounding
+    // mode before and after getting the result
+    function callBigFunc (num, method, arg) {
+        var prevRm = Big['RM'],
+            result;
+        setRoundingMode(num._rm);
+        result = num._value[method](arg);
+        setRoundingMode(prevRm);
+        return result;
+    }
+
+    // Helper function to prepare the environment (pattern and locale) 
+    // before running a function
+    function prepareEnv (num, pattern, options, cb) {
+        var prevPattern = '' + currentPattern,
+            prevRm = Big['RM'],
+            rm,
+            result;
+
+        pattern = pattern || (( num._currentPattern || currentPattern ) || 'decimal');
+        options = options || {};
+
+        // Set rounding mode
+        rm = options.rm || num._rm;
+        setRoundingMode(rm);
+
+        // Look up pattern from locale
+        if (pattern in locales[currentLocale].patterns) {
+            pattern = locales[currentLocale].patterns[pattern];
+        }
+
+        // Parse pattern and format
+        parsePattern(pattern);
+        currentPattern = pattern;
+
+        result = cb(options);
+
+        // Restore previous pattern, if there was any
+        if (prevPattern) {
+            currentPattern = prevPattern;
+        }
+        setRoundingMode(prevRm);
+
+        if (options.set) {
+            num.set( result );
+        }
+
+        return result;
     }
 
 
@@ -1058,74 +1108,18 @@
         },
 
         format : function (pattern, options) {
-            var prevPattern = '' + currentPattern,
-                prevRm = Big['RM'],
-                rm,
-                result;
-
-            pattern = pattern || ( ( this._currentPattern || currentPattern ) || 'decimal');
-            options = options || {};
-
-            // Set rounding mode
-            rm = options.rm || this._rm;
-            setRoundingMode(rm);
-
-            // Look up pattern from locale
-            if (pattern in locales[currentLocale].patterns) {
-                pattern = locales[currentLocale].patterns[pattern];
-            }
-
-            // Parse pattern and format
-            parsePattern(pattern);
-            currentPattern = pattern;
-            result = format(this.value(), options);
-
-            // Restore previous pattern, if there was any
-            if (prevPattern) {
-                currentPattern = prevPattern;
-            }
-            setRoundingMode(prevRm);
-
-            return result;
+            var self = this;
+            return prepareEnv(this, pattern, options, function (options) {
+                return format(self.value(), options);
+            });
         },
 
         unformat : function (input, options) {
-            var pattern,
-                prevPattern = '' + currentPattern,
-                prevRm = '' + Big['RM'],
-                rm,
-                result;
-
-            // Get the current pattern
-            pattern = ( this._currentPattern || currentPattern ) || 'decimal';
             options = options || {};
             options.currency = options.currency || locales[currentLocale].currency.local;
-
-            // Set rounding mode
-            rm = options.rm || this._rm;
-            setRoundingMode(rm);
-
-            // Look up pattern from locale
-            if (pattern in locales[currentLocale].patterns) {
-                pattern = locales[currentLocale].patterns[pattern];
-            }
-
-            // Parse pattern and format
-            parsePattern(pattern);
-            currentPattern = pattern;
-            result = unformat(input, options);
-
-            // Restore previous pattern, if there was any
-            if (prevPattern) {
-                currentPattern = prevPattern;
-            }
-            setRoundingMode(prevRm);
-
-            if (options.set) {
-                this.set( result );
-            }
-
-            return result;
+            return prepareEnv(this, null, options, function (options) {
+                return unformat(input, options);
+            });
         },
 
         decimal: function (options) {
@@ -1268,22 +1262,12 @@
         return this._value.lte(value);
     };
 
-    numeral.fn.toFixed = function(dp) {
-        var prevRm = Big['RM'],
-            result;
-        setRoundingMode(this._rm);
-        result = this._value.toFixed(dp);
-        setRoundingMode(prevRm);
-        return result;
+    numeral.fn.toFixed = function(decimals) {
+        return callBigFunc(this, 'toFixed', decimals);
     };
 
-    numeral.fn.toPrecision = function(sd) {
-        var prevRm = Big['RM'],
-            result;
-        setRoundingMode(this._rm);
-        result = this._value.toPrecision(sd);
-        setRoundingMode(prevRm);
-        return result;
+    numeral.fn.toPrecision = function(digits) {
+        return callBigFunc(this, 'toPrecision', digits);
     };
 
     numeral.fn.rm = numeral.fn.roundingMode = function(rm) {

@@ -29,7 +29,8 @@ module.exports = function(grunt) {
                 files: minifiedFiles
             },
             options: {
-                preserveComments: 'some'
+                preserveComments: 'some',
+                report: 'gzip'
             }
         },
         concat: {

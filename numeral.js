@@ -19,7 +19,6 @@
         locales = {},
         currentLocale = 'en',
         zeroFormat = null,
-        defaultFormat = '0,0',
         // Internal storage for parsed pattern results
         patterns = {},
         currentPattern,
@@ -62,7 +61,7 @@
         hasModule = (typeof module !== 'undefined' && module.exports);
 
     // Require Big, if we're on the server, and it's not already present.
-    if (!Big && (typeof require !== 'undefined')) Big = require('big.js');
+    if (!Big && (typeof require !== 'undefined')) { Big = require('big.js'); }
 
 
     /************************************
@@ -84,7 +83,6 @@
      * @param {string} pattern String pattern being applied.
      */
     function applyPattern (pattern) {
-        pattern = pattern.replace(/ /g, '\u00a0');
 
         // Parse only if parsing results do not exist
         if (!patterns[pattern]) {
@@ -125,7 +123,7 @@
                 result.negativeSuffix = parseAffix(pattern, pos);
             } else {
                 // if no negative affix specified, they share the same positive affix
-                result.negativePrefix = result.positivePrefix + result.negativePrefix;
+                result.negativePrefix = result.negativePrefix + result.positivePrefix;
                 result.negativeSuffix += result.positiveSuffix;
             }
         }
@@ -392,19 +390,19 @@
                 if (number >= powers.trillion) {
                     // trillion
                     abbr = abbr + locales[currentLocale].abbreviations.trillion;
-                    number = new Big( number ).divide( powers.trillion ).toString();
+                    number = new Big( number ).div( powers.trillion ).toString();
                 } else if (number < powers.trillion && number >= powers.billion) {
                     // billion
                     abbr = abbr + locales[currentLocale].abbreviations.billion;
-                    number = new Big( number ).divide( powers.billion ).toString();
+                    number = new Big( number ).div( powers.billion ).toString();
                 } else if (number < powers.billion && number >= powers.million) {
                     // million
                     abbr = abbr + locales[currentLocale].abbreviations.million;
-                    number = new Big( number ).divide( powers.million ).toString();
+                    number = new Big( number ).div( powers.million ).toString();
                 } else if (number < powers.million && number >= powers.thousand) {
                     // thousand
                     abbr = abbr + locales[currentLocale].abbreviations.thousand;
-                    number = new Big( number ).divide( powers.thousand ).toString();
+                    number = new Big( number ).div( powers.thousand ).toString();
                 }
             }
 
@@ -417,7 +415,7 @@
                     if (number >= min && number < max) {
                         bytes = bytes + byteUnits[power];
                         if (min > 0) {
-                            number = new Big( number ).divide( min ).toString();
+                            number = new Big( number ).div( min ).toString();
                         }
                         break;
                     }
@@ -437,16 +435,19 @@
             }
 
             // Append the abbreviation
-            if (options.abbr && abbr)
+            if (options.abbr && abbr) {
                 parts.push(abbr);
+            }
 
             // Append the byte unit
-            if (options.bytes && bytes)
+            if (options.bytes && bytes) {
                 parts.push(bytes);
+            }
 
             // Append the ordinal
-            if (options.ordinal && ordinal)
+            if (options.ordinal && ordinal) {
                 parts.push(ordinal);
+            }
 
         }
 
@@ -469,7 +470,9 @@
             symbol,
             i;
 
-        if (!affix.length) return '';
+        if (!affix.length) {
+            return '';
+        }
 
         for (i = 0; i < len; i++) {
             ch = affix.charAt(i);
@@ -509,7 +512,7 @@
         // Determine minimum and maximum digits
         minFracDigits = minFracDigits >= 0 ? minFracDigits : patterns[currentPattern].minFracDigits;
         maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : patterns[currentPattern].maxFracDigits;
-        if (maxFracDigits < minFracDigits) maxFracDigits = minFracDigits;
+        if (maxFracDigits < minFracDigits) { maxFracDigits = minFracDigits; }
 
         // Round the number
         var power = Math.pow(10, maxFracDigits),
@@ -518,7 +521,7 @@
             fracValue = 0,
             fractionPresent,
             intPart = '',
-            translatableInt = intValue,
+            translatableInt,
             decimal = locales[currentLocale].symbols.decimal,
             grouping = locales[currentLocale].symbols.group,
             zeroCode = enforceAsciiDigits ? 48 /* ascii '0' */ : locales[currentLocale].symbols.zero.charCodeAt(0),
@@ -534,6 +537,7 @@
         }
 
         fractionPresent = minFracDigits > 0 || fracValue > 0;
+        translatableInt = intValue;
 
         while (translatableInt > 1E20) {
             // here it goes beyond double precision, add '0' make it look better
@@ -543,7 +547,6 @@
 
         intPart = translatableInt + intPart;
         digitLen = intPart.length;
-
 
         if (intValue > 0 || minIntDigits > 0) {
             for (i = digitLen; i < minIntDigits; i++) {
@@ -698,9 +701,9 @@
             gotPositive,
             gotNegative;
 
-        // We don't want to handle 2 kind of spaces in parsing, normalize it to nbsp
+        // We don't want to handle 2 kind of spaces in parsing, normalize nbsp to whitespace
         text = typeof text !== 'undefined' ? String(text) : '';
-        text = text.replace(/ /g, '\u00a0');
+        text = text.replace(/\u00a0/g, ' ');
 
         // Check if we are dealing with time?
         if (text.indexOf(':') > -1) {
@@ -804,7 +807,7 @@
                 normalizedText += '.';
                 sawDecimal = true;
             } else if (ch === grouping.charAt(0) &&
-                ('\u00a0' !== grouping.charAt(0) ||
+                (' ' !== grouping.charAt(0) ||
                     pos + 1 < text.length &&
                     getDigit(text.charAt(pos + 1)) >= 0)) {
                 // Got a grouping character here. When grouping character is nbsp, need
@@ -840,7 +843,7 @@
                     break;
                 }
             } else {
-                if (strict) break;
+                if (strict) { break; }
             }
         }
 
@@ -903,8 +906,10 @@
         Top Level Functions
     ************************************/
 
-    numeral = function (input) {
-        if (!currentPattern) applyPattern(locales[currentLocale].patterns.decimal);
+    numeral = function (input, rm) {
+        Big['RM'] = rm || Big['RM'];
+
+        if (!currentPattern) { applyPattern(locales[currentLocale].patterns.decimal); }
 
         if (numeral.isNumeral(input)) {
             input = input.value();
@@ -928,6 +933,11 @@
     // custom zero format
     numeral.zeroFormat = function(format) {
         zeroFormat = typeof(format) === 'string' ? format : null;
+    };
+
+    // custom zero format
+    numeral.roundingMode = numeral.rm = function(rm) {
+        Big['RM'] = parseInt(rm, 10) >= 0 ? rm : Big['RM'];
     };
 
     // Set current format
@@ -1023,7 +1033,7 @@
 
     function inArray(array, value) {
         for (var i = 0; i < array.length; i++) {
-            if (array[i] === value) return true;
+            if (array[i] === value) { return true; }
         }
         return false;
     }
@@ -1058,7 +1068,9 @@
             applyPattern(pattern);
             result = format(this.value(), options);
             // Restore the previous pattern
-            if (previousPattern) applyPattern(previousPattern);
+            if (previousPattern) {
+                applyPattern(previousPattern);
+            }
             return result;
         },
 
@@ -1215,6 +1227,11 @@
 
     numeral.fn.toPrecision = function(sd) {
         return this._value.toPrecision(sd);
+    };
+
+    numeral.fn.rm = numeral.fn.roundingMode = function(rm) {
+        Big['RM'] = parseInt(rm, 10) >= 0 ? rm : Big['RM'];
+        return this;
     };
 
     /************************************

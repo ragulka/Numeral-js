@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 
     grunt.initConfig({
         nodeunit : {
-            all : ['tests/**/*.js']
+            all : ['tests/numeral/*.js']
         },
         uglify: {
             my_target: {

@@ -1,4 +1,8 @@
-var numeral = require('../../numeral');
+var numeral = require('../../numeral'),
+    et = require('../../locales/et');
+
+// Load in estonian locale for testing local locale
+numeral.locale('et', et).locale('en');
 
 exports.misc = {
 
@@ -89,6 +93,22 @@ exports.misc = {
 
         test.done();
     },
+
+
+    locale: function(test) {
+        test.expect(3);
+
+        var num1 = numeral(10000.23).locale('et'),
+            num2 = numeral(10000.23);
+
+        test.strictEqual(num1.decimal(), '10 000,23', 'Changing instance locale should affect the instance\'s formats');
+        test.strictEqual(num2.decimal(), '10,000.23', 'Changing instance locale should not affect other instances');
+        test.strictEqual(numeral(10000.23).decimal(), '10,000.23', 'Changing instance locale should not affect global locale');
+
+        test.done();
+
+    },
+
     
     localeData: function(test) {
         test.expect(10);

@@ -906,6 +906,7 @@
 
     numeral = function (input, rm) {
         this._rm = rm || Big['RM'];
+        this._locale = currentLocale;
 
         if (!currentPattern) {
             currentPattern = locales[currentLocale].patterns.decimal;
@@ -1002,9 +1003,8 @@
             decimal:    '#,##0.###',
             scientific: '#E0',
             percent:    '#,##0%',
-            currency:   '\u00A4#,##0.00',
-            accounting: '\u00A4#,##0.00;(\u00A4#,##0.00)',
-            bytes:      '#,##0.###B',
+            currency:   '¤#,##0.00',
+            accounting: '¤#,##0.00;(¤#,##0.00)'
         },
         abbreviations: {
             thousand:   'k',
@@ -1060,8 +1060,10 @@
     // before running a function
     function prepareEnv (num, pattern, options, cb) {
         var prevPattern = '' + currentPattern,
+            prevLocale = '' + currentLocale,
             prevRm = Big['RM'],
             rm,
+            locale,
             result;
 
         pattern = pattern || (( num._currentPattern || currentPattern ) || 'decimal');
@@ -1070,6 +1072,10 @@
         // Set rounding mode
         rm = options.rm || num._rm;
         setRoundingMode(rm);
+
+        // Set current locale
+        locale = options.locale || num._locale;
+        numeral.locale(locale);
 
         // Look up pattern from locale
         if (pattern in locales[currentLocale].patterns) {
@@ -1082,11 +1088,12 @@
 
         result = cb(options);
 
-        // Restore previous pattern, if there was any
+        // Restore previous settings
         if (prevPattern) {
             currentPattern = prevPattern;
         }
         setRoundingMode(prevRm);
+        numeral.locale(prevLocale);
 
         if (options.set) {
             num.set( result );
@@ -1105,6 +1112,11 @@
 
         clone : function () {
             return numeral(this);
+        },
+
+        locale : function(locale) {
+            this._locale = locale;
+            return this;
         },
 
         format : function (pattern, options) {

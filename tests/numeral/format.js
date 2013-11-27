@@ -4,7 +4,7 @@ exports.format = {
     default: function (test) {
         test.expect(1);
 
-        numeral.setFormat('#,##0');
+        numeral.pattern('#,##0');
 
         test.strictEqual(numeral(10000).format(), '10,000', '#,##0');
 
@@ -170,12 +170,12 @@ exports.format = {
       
     },
 
-    setFormat: function(test) {
+    pattern: function(test) {
         var num1, num2;
 
         // Format should be applied to local instance only, if setting via instance method
         
-        numeral.setFormat('#,##0');
+        numeral.pattern('#,##0');
         num1 = numeral(10000.23);
         num2 = numeral(10000.23);
 
@@ -183,14 +183,14 @@ exports.format = {
         test.strictEqual( num1.format(), '10,000' );
         test.strictEqual( num2.format(), '10,000' );
 
-        num1.setFormat('0');
-        num2.setFormat('0.00');
+        num1.pattern('0');
+        num2.pattern('0.00');
 
         test.strictEqual( numeral(10000.23).format(), '10,000' );
         test.strictEqual( num1.format(), '10000' );
         test.strictEqual( num2.format(), '10000.23' );
 
-        numeral.setFormat('#0%');
+        numeral.pattern('#0%');
         test.strictEqual( numeral(0.1).format(), '10%' );
         test.strictEqual( num1.format(), '10000' );
         test.strictEqual( num2.format(), '10000.23' );

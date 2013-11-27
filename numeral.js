@@ -12,16 +12,19 @@
         Constants
     ************************************/
 
-    var root = this,
-        numeral,
+    var numeral,
         VERSION = '1.5.2',
+        root = this,
+        
         // internal storage for locale config files
         locales = {},
-        currentLocale = 'en',
         zeroFormat = null,
+        
         // Internal storage for parsed pattern results
         patterns = {},
-        currentPattern,
+
+        // Check for nodeJS
+        hasModule = (typeof module !== 'undefined' && module.exports),
 
         // Constants used in parsing patterns
         ZERO =      '0',
@@ -55,18 +58,19 @@
             trillion:   Math.pow(10, 12),
         },
 
-        Big = root.Big,
-        
-        // Check for nodeJS
-        hasModule = (typeof module !== 'undefined' && module.exports);
+        Big = root.Big;
 
     // Require Big, if we're on the server, and it's not already present.
     if (!Big && (typeof require !== 'undefined')) { Big = require('big.js'); }
 
 
     /************************************
-        Constructor
+        Constructors
     ************************************/
+
+    function Locale() {
+
+    }
 
     // Numeral prototype object
     function Numeral (number) {
@@ -78,57 +82,70 @@
     ************************************/
 
     /**
-     * Parse provided pattern, result are stored in the patterns object.
+     * Get pattern definition for the provided pattern.
      *
-     * @param {string} pattern String pattern being applied.
+     * @param {string} pattern String pattern.
+     * @return {object} Pattern definition.
      */
-    function parsePattern (pattern) {
-
-        // Parse only if parsing results do not exist
+    function getPatternDefiniton (pattern) {
+        // If the definition does not exist, parse the pattern
         if (!patterns[pattern]) {
-            var pos = [0],
-                trunkStart,
-                trunkLen,
-                result = patterns[pattern] = {
-                    maxIntDigits: 40,
-                    minIntDigits: 1,
-                    maxFracDigits: 3,
-                    minFracDigits: 0,
-                    minExpDigits: 0,
-                    useSignForPositiveExp: false,
-                    positivePrefix: '',
-                    positiveSuffix: '',
-                    negativePrefix: '-',
-                    negativeSuffix: '',
-                    groupingSize: 3,
-                    groupingSize2: 0,
-                    multiplier: 1,
-                    decimalSeparatorAlwaysShown: false,
-                    useExpNotation: false
-                };
-
-            result.positivePrefix = parseAffix(pattern, pos);
-            trunkStart = pos[0];
-            parseTrunk(pattern, pos);
-            trunkLen = pos[0] - trunkStart;
-            result.positiveSuffix = parseAffix(pattern, pos);
-            
-            if (pos[0] < pattern.length &&
-                pattern.charAt(pos[0]) === SEPARATOR) {
-                pos[0]++;
-                result.negativePrefix = parseAffix(pattern, pos);
-                // we assume this part is identical to positive part.
-                // user must make sure the pattern is correctly constructed.
-                pos[0] += trunkLen;
-                result.negativeSuffix = parseAffix(pattern, pos);
-            } else {
-                // if no negative affix specified, they share the same positive affix
-                result.negativePrefix = result.negativePrefix + result.positivePrefix;
-                result.negativeSuffix += result.positiveSuffix;
-            }
+            return parsePattern(pattern);
         }
 
         return patterns[pattern];
+    }
+
+    /**
+     * Parse provided pattern, result are stored in the patterns object.
+     *
+     * @param {string} pattern String pattern being applied.
+     * @return {object} Pattern definition.
+     */
+    function parsePattern (pattern) {
+        var pos = [0],
+            trunkStart,
+            trunkLen,
+            result = patterns[pattern] = {
+                key: pattern,
+                maxIntDigits: 40,
+                minIntDigits: 1,
+                maxFracDigits: 3,
+                minFracDigits: 0,
+                minExpDigits: 0,
+                useSignForPositiveExp: false,
+                positivePrefix: '',
+                positiveSuffix: '',
+                negativePrefix: '-',
+                negativeSuffix: '',
+                groupingSize: 3,
+                groupingSize2: 0,
+                multiplier: 1,
+                decimalSeparatorAlwaysShown: false,
+                useExpNotation: false
+            };
+
+        result.positivePrefix = parseAffix(pattern, pos);
+        trunkStart = pos[0];
+        parseTrunk(pattern, pos);
+        trunkLen = pos[0] - trunkStart;
+        result.positiveSuffix = parseAffix(pattern, pos);
+        
+        if (pos[0] < pattern.length &&
+            pattern.charAt(pos[0]) === SEPARATOR) {
+            pos[0]++;
+            result.negativePrefix = parseAffix(pattern, pos);
+            // we assume this part is identical to positive part.
+            // user must make sure the pattern is correctly constructed.
+            pos[0] += trunkLen;
+            result.negativeSuffix = parseAffix(pattern, pos);
+        } else {
+            // if no negative affix specified, they share the same positive affix
+            result.negativePrefix = result.negativePrefix + result.positivePrefix;
+            result.negativeSuffix += result.positiveSuffix;
+        }
+
+        return result;
     }
 
     /**
@@ -346,9 +363,11 @@
      * @param {number} number The Number to be formatted.
      * @return {string} The formatted number string.
      */
-    function format (number, options) {
-        var parts = [],
-            isNegative,
+    function format (number, config) {
+        var pattern = config.pattern,
+            locale = config.locale,
+            parts = [],
+            isNegative = number < 0.0 || number === 0.0 && 1 / number < 0.0, // in icu code, it is commented that certain computation need to keep the negative sign for 0
             abbr = '',
             bytes = '',
             ordinal = '',
@@ -357,56 +376,51 @@
             max;
 
         if (isNaN(number)) {
-            return locales[currentLocale].symbols.nan;
+            return locale.symbols.nan;
         }
 
         if (number === 0 && zeroFormat !== null) {
             return zeroFormat;
         }
 
-        options = options || {};
-        options.currency = options.currency || locales[currentLocale].currency.local;
+        if (pattern.maxFracDigits < pattern.minFracDigits) {
+            pattern.maxFracDigits = pattern.minFracDigits;
+        }
 
-        // in icu code, it is commented that certain computation need to keep the
-        // negative sign for 0.
-        isNegative = number < 0.0 || number === 0.0 && 1 / number < 0.0;
-
-        parts.push(subformatAffix( isNegative ? patterns[currentPattern].negativePrefix : patterns[currentPattern].positivePrefix, options));
+        parts.push(subformatAffix( isNegative ? pattern.negativePrefix : pattern.positivePrefix, config));
 
         if (!isFinite(number)) {
-            parts.push(locales[currentLocale].symbols.infinity);
+            parts.push(locale.symbols.infinity);
         } else {
             number = Math.abs(number);
-
-            number *= patterns[currentPattern].multiplier;
+            number *= config.pattern.multiplier;
 
             // If we are dealing with abbreviations, select the correct
             // abbreviation and manipulate the number
-            if (options.abbr) {
+            if (config.abbr) {
                 // When using abbreviations, minimum requried decimals should be 0
-                options.minFracDigits = 0;
-
+                config.pattern.minFracDigits = 0;
                 if (number >= powers.trillion) {
                     // trillion
-                    abbr = abbr + locales[currentLocale].abbreviations.trillion;
+                    abbr = abbr + locale.abbreviations.trillion;
                     number = new Big( number ).div( powers.trillion ).toString();
                 } else if (number < powers.trillion && number >= powers.billion) {
                     // billion
-                    abbr = abbr + locales[currentLocale].abbreviations.billion;
+                    abbr = abbr + locale.abbreviations.billion;
                     number = new Big( number ).div( powers.billion ).toString();
                 } else if (number < powers.billion && number >= powers.million) {
                     // million
-                    abbr = abbr + locales[currentLocale].abbreviations.million;
+                    abbr = abbr + locale.abbreviations.million;
                     number = new Big( number ).div( powers.million ).toString();
                 } else if (number < powers.million && number >= powers.thousand) {
                     // thousand
-                    abbr = abbr + locales[currentLocale].abbreviations.thousand;
+                    abbr = abbr + locale.abbreviations.thousand;
                     number = new Big( number ).div( powers.thousand ).toString();
                 }
             }
 
             // See if we are formatting bytes
-            if (options.bytes) {
+            if (config.bytes) {
                 for (power = 0; power <= byteUnits.length; power++) {
                     min = Math.pow(1024, power);
                     max = Math.pow(1024, power+1);
@@ -422,35 +436,35 @@
             }
 
             // See if ordinal is wanted
-            if (options.ordinal) {
-                ordinal = '' + locales[currentLocale].ordinal(number);
+            if (config.ordinal) {
+                ordinal = '' + locale.ordinal(number);
             }
 
             // Format the number part
-            if (patterns[currentPattern].useExponentialNotation) {
-                subformatExponential(number, parts);
+            if (pattern.useExponentialNotation) {
+                subformatExponential(number, parts, config);
             } else {
-                subformatFixed(number, patterns[currentPattern].minIntDigits, options.minFracDigits, options.maxFracDigits, parts);
+                subformatFixed(number, parts, config);
             }
 
             // Append the abbreviation
-            if (options.abbr && abbr) {
+            if (config.abbr && abbr) {
                 parts.push(abbr);
             }
 
             // Append the byte unit
-            if (options.bytes && bytes) {
+            if (config.bytes && bytes) {
                 parts.push(bytes);
             }
 
             // Append the ordinal
-            if (options.ordinal && ordinal) {
+            if (config.ordinal && ordinal) {
                 parts.push(ordinal);
             }
 
         }
 
-        parts.push(subformatAffix(isNegative ? patterns[currentPattern].negativeSuffix : patterns[currentPattern].positiveSuffix, options));
+        parts.push(subformatAffix(isNegative ? pattern.negativeSuffix : pattern.positiveSuffix, config));
 
         return parts.join('');
     }
@@ -461,12 +475,13 @@
      * @param {string} affix Value need to be formated.
      * @return The formatted affix
      */
-    function subformatAffix (affix, options) {
+    function subformatAffix (affix, config) {
         var len = affix.length,
-            currency = options.currency,
+            currency = config.currency,
+            locale = config.locale,
             parts = [],
-            ch,
             symbol,
+            ch,
             i;
 
         if (!affix.length) {
@@ -477,15 +492,15 @@
             ch = affix.charAt(i);
             switch (ch) {
                 case PERCENT:
-                    parts.push(locales[currentLocale].symbols.percent);
+                    parts.push(locale.symbols.percent);
                 break;
                 case PERMILLE:
-                    parts.push(locales[currentLocale].symbols.permille);
+                    parts.push(locale.symbols.permille);
                 break;
                 case CURRENCY:
                     symbol = currency;
-                    if (!options.globalStyle && locales[currentLocale].currency.symbols && locales[currentLocale].currency.symbols.hasOwnProperty(currency)) {
-                        symbol = locales[currentLocale].currency.symbols[currency];
+                    if (!config.globalStyle && locale.currency.symbols && locale.currency.symbols.hasOwnProperty(currency)) {
+                        symbol = locale.currency.symbols[currency];
                     }
                     parts.push(symbol);
                 break;
@@ -507,23 +522,21 @@
      * @param {Array} parts This array holds the pieces of formatted string.
      *     This function will add its formatted pieces to the array.
      */
-    function subformatFixed (number, minIntDigits, minFracDigits, maxFracDigits, parts) {
-        // Determine minimum and maximum digits
-        minFracDigits = minFracDigits >= 0 ? minFracDigits : patterns[currentPattern].minFracDigits;
-        maxFracDigits = maxFracDigits >= 0 ? maxFracDigits : patterns[currentPattern].maxFracDigits;
-        if (maxFracDigits < minFracDigits) { maxFracDigits = minFracDigits; }
-
-        // Round the number
-        var power = Math.pow(10, maxFracDigits),
+    function subformatFixed (number, parts, config) {
+        var pattern = config.pattern,
+            minIntDigits = pattern.minIntDigits,
+            minFracDigits = pattern.minFracDigits,
+            maxFracDigits = pattern.maxFracDigits,
+            power = Math.pow(10, maxFracDigits),
             shiftedNumber = new Big( number ).times( power ).round().toString(),
             intValue = number,
             fracValue = 0,
             fractionPresent,
             intPart = '',
             translatableInt,
-            decimal = locales[currentLocale].symbols.decimal,
-            grouping = locales[currentLocale].symbols.group,
-            zeroCode = enforceAsciiDigits ? 48 /* ascii '0' */ : locales[currentLocale].symbols.zero.charCodeAt(0),
+            decimal = config.locale.symbols.decimal,
+            grouping = config.locale.symbols.group,
+            zeroCode = enforceAsciiDigits ? 48 /* ascii '0' */ : config.locale.symbols.zero.charCodeAt(0),
             digitLen,
             i,
             cPos,
@@ -556,12 +569,12 @@
                 parts.push(String.fromCharCode(zeroCode + intPart.charAt(i) * 1));
                 cPos = digitLen - i;
 
-                if (cPos > 1 && patterns[currentPattern].groupingSize > 0) {
-                    if (patterns[currentPattern].groupingSize2 > 0 && cPos > patterns[currentPattern].groupingSize &&
-                        (cPos - patterns[currentPattern].groupingSize) % patterns[currentPattern].groupingSize2 === 1) {
+                if (cPos > 1 && pattern.groupingSize > 0) {
+                    if (pattern.groupingSize2 > 0 && cPos > pattern.groupingSize &&
+                        (cPos - pattern.groupingSize) % pattern.groupingSize2 === 1) {
                         parts.push(grouping);
-                    } else if (patterns[currentPattern].groupingSize2 === 0 &&
-                        cPos % patterns[currentPattern].groupingSize === 1) {
+                    } else if (pattern.groupingSize2 === 0 &&
+                        cPos % pattern.groupingSize === 1) {
                         parts.push(grouping);
                     }
                 }
@@ -573,7 +586,7 @@
         }
 
         // Output the decimal separator if we always do so.
-        if (patterns[currentPattern].decimalSeparatorAlwaysShown || fractionPresent) {
+        if (pattern.decimalSeparatorAlwaysShown || fractionPresent) {
             parts.push(decimal);
         }
 
@@ -597,21 +610,22 @@
      *     string. This function will append more formatted pieces to the array.
      * @private
      */
-    function addExponentPart (exponent, parts) {
-        var exponentDigits = '' + exponent,
-            zeroChar = enforceAsciiDigits ? '0' : locales[currentLocale].symbols.zero,
+    function addExponentPart (exponent, parts, config) {
+        var symbols = config.locale.symbols,
+            exponentDigits = '' + exponent,
+            zeroChar = enforceAsciiDigits ? '0' : symbols.zero,
             i;
 
-        parts.push(locales[currentLocale].symbols.exponential);
+        parts.push(symbols.exponential);
 
         if (exponent < 0) {
             exponent = -exponent;
-            parts.push(locales[currentLocale].symbols.minus);
-        } else if (patterns[currentPattern].useSignForPositiveExp) {
-            parts.push(locales[currentLocale].symbols.plus);
+            parts.push(symbols.minus);
+        } else if (config.pattern.useSignForPositiveExp) {
+            parts.push(symbols.plus);
         }
 
-        for (i = exponentDigits.length; i < patterns[currentPattern].minExpDigits; i++) {
+        for (i = exponentDigits.length; i < config.pattern.minExpDigits; i++) {
             parts.push(zeroChar);
         }
         parts.push(exponentDigits);
@@ -625,42 +639,47 @@
      *     string. This function will append more formatted pieces to the array.
      * @private
      */
-    function subformatExponential (number, minFracDigits, maxFracDigits, parts) {
+    function subformatExponential (number, parts, config) {
+        var minIntDigits = config.pattern.minIntDigits,
+            maxIntDigits = config.pattern.maxIntDigits,
+            minFracDigits = config.pattern.minFracDigits,
+            maxFracDigits = config.pattern.maxFracDigits,
+            exponent;
+
         if (number === 0.0) {
-            subformatFixed(number, patterns[currentPattern].minIntDigits, minFracDigits, maxFracDigits, parts);
-            addExponentPart(0, parts);
+            subformatFixed(number, parts, config);
+            addExponentPart(0, parts, config);
             return;
         }
 
-        var exponent = Math.floor(Math.log(number) / Math.log(10)),
-            minIntDigits = patterns[currentPattern].minIntDigits;
-        
+        exponent = Math.floor(Math.log(number) / Math.log(10));
         number /= Math.pow(10, exponent);
 
-        if (patterns[currentPattern].maxIntDigits > 1 &&
-            patterns[currentPattern].maxIntDigits > patterns[currentPattern].minIntDigits) {
+        if (maxIntDigits > 1 &&
+            maxIntDigits > minIntDigits) {
             // A repeating range is defined; adjust to it as follows.
             // If repeat == 3, we have 6,5,4=>3; 3,2,1=>0; 0,-1,-2=>-3;
             // -3,-4,-5=>-6, etc. This takes into account that the
             // exponent we have here is off by one from what we expect;
             // it is for the format 0.MMMMMx10^n.
-            while ((exponent % patterns[currentPattern].maxIntDigits) !== 0) {
+            while ((exponent % maxIntDigits) !== 0) {
                 number *= 10;
                 exponent--;
             }
             minIntDigits = 1;
         } else {
             // No repeating range is defined; use minimum integer digits.
-            if (patterns[currentPattern].minIntDigits < 1) {
+            if (minIntDigits < 1) {
                 exponent++;
                 number /= 10;
             } else {
-                exponent -= patterns[currentPattern].minIntDigits - 1;
-                number *= Math.pow(10, patterns[currentPattern].minIntDigits - 1);
+                exponent -= minIntDigits - 1;
+                number *= Math.pow(10, minIntDigits - 1);
             }
         }
-        subformatFixed(number, minIntDigits, parts);
-        addExponentPart(exponent, parts);
+        config.pattern.minIntDigits = minIntDigits;
+        subformatFixed(number, parts, config);
+        addExponentPart(exponent, parts, config);
     }
 
     /**
@@ -690,9 +709,11 @@
      * @return {number} Parsed number. This throws an error if the text cannot be
      *     parsed.
      */
-    function unformat (text, options) {
+    function unformat (text, config) {
         var pos = 0,
             ret = NaN,
+            pattern = config.pattern,
+            symbols = config.locale.symbols,
             positivePrefix,
             negativePrefix,
             positiveSuffix,
@@ -701,8 +722,9 @@
             gotNegative;
 
         // We don't want to handle 2 kind of spaces in parsing, normalize nbsp to whitespace
-        text = typeof text !== 'undefined' ? String(text) : '';
+        text = text === undefined ? '' : String(text);
         text = text.replace(/\u00a0/g, ' ');
+
 
         // Check if we are dealing with time?
         if (text.indexOf(':') > -1) {
@@ -714,8 +736,8 @@
         }
 
         // Check if we are dealing with positive or negative prefixes
-        positivePrefix = subformatAffix(patterns[currentPattern].positivePrefix, options);
-        negativePrefix = subformatAffix(patterns[currentPattern].negativePrefix, options);
+        positivePrefix = subformatAffix(pattern.positivePrefix, config);
+        negativePrefix = subformatAffix(pattern.negativePrefix, config);
         gotPositive = text.indexOf(positivePrefix) === pos;
         gotNegative = text.indexOf(negativePrefix) === pos;
 
@@ -735,11 +757,11 @@
         }
 
         // Process digits or Infinity, find decimal position
-        if (text.indexOf(locales[currentLocale].symbols.infinity, pos) === pos) {
-            pos += locales[currentLocale].symbols.infinity.length;
+        if (text.indexOf(symbols.infinity, pos) === pos) {
+            pos += symbols.infinity.length;
             ret = Infinity;
         } else {
-            ret = unformatNumber(text, pos, options.strict);
+            ret = unformatNumber(text, pos, config);
         }
 
         return gotNegative ? -ret : ret;
@@ -756,16 +778,17 @@
      * @return {number} Number value, or NaN if nothing can be parsed.
      * @private
      */
-    function unformatNumber (text, pos, strict) {
+    function unformatNumber (text, pos, config) {
         var sawDecimal = false,
             sawExponent = false,
             sawDigit = false,
             scale = 1,
             bytesMultiplier = 1,
             powerMultiplier = 1,
-            decimal = locales[currentLocale].symbols.decimal,
-            grouping = locales[currentLocale].symbols.group,
-            expChar = locales[currentLocale].symbols.exponential,
+            locale = config.locale,
+            decimal = locale.symbols.decimal,
+            grouping = locale.symbols.group,
+            expChar = locale.symbols.exponential,
             power,
             key,
             regex,
@@ -783,8 +806,8 @@
         }
 
         // Check if we are dealing with abbreviations
-        for (key in locales[currentLocale].abbreviations) {
-            regex = new RegExp('[^a-zA-Z]' + locales[currentLocale].abbreviations[key] + '(?:\\)?)?$');
+        for (key in locale.abbreviations) {
+            regex = new RegExp('[^a-zA-Z]' + locale.abbreviations[key] + '(?:\\)?)?$');
             if (text.match(regex)) {
                 powerMultiplier = powers[key];
                 break;
@@ -794,7 +817,7 @@
         normalizedText = '';
         for (; pos < text.length; pos++) {
             ch = text.charAt(pos);
-            digit = getDigit(ch);
+            digit = getDigit(ch, config);
             if (digit >= 0 && digit <= 9) {
                 normalizedText += digit;
                 sawDigit = true;
@@ -804,10 +827,7 @@
                 }
                 normalizedText += '.';
                 sawDecimal = true;
-            } else if (ch === grouping.charAt(0) &&
-                (' ' !== grouping.charAt(0) ||
-                    pos + 1 < text.length &&
-                    getDigit(text.charAt(pos + 1)) >= 0)) {
+            } else if (ch === grouping.charAt(0) && (' ' !== grouping.charAt(0) || pos + 1 < text.length && getDigit(text.charAt(pos + 1), config) >= 0)) {
                 // Got a grouping character here. When grouping character is nbsp, need
                 // to make sure the character following it is a digit.
                 if (sawDecimal || sawExponent) {
@@ -822,7 +842,7 @@
                 sawExponent = true;
             } else if (ch === '+' || ch === '-') {
                 normalizedText += ch;
-            } else if (ch === locales[currentLocale].symbols.percent.charAt(0)) {
+            } else if (ch === locale.symbols.percent.charAt(0)) {
                 if (scale !== 1) {
                     break;
                 }
@@ -831,7 +851,7 @@
                     pos++; // eat this character if parse end here
                     break;
                 }
-            } else if (ch === locales[currentLocale].symbols.permille.charAt(0)) {
+            } else if (ch === locale.symbols.permille.charAt(0)) {
                 if (scale !== 1) {
                     break;
                 }
@@ -841,7 +861,9 @@
                     break;
                 }
             } else {
-                if (strict) { break; }
+                if (config.strict) {
+                    break;
+                }
             }
         }
 
@@ -862,9 +884,9 @@
      * @param {string} ch Character that represents a digit.
      * @return {number} The digit value, or -1 on error.
      */
-    function getDigit (ch) {
+    function getDigit (ch, config) {
         var code = ch.charCodeAt(0),
-            zeroCode = locales[currentLocale].symbols.zero.charCodeAt(0);
+            zeroCode = config.locale.symbols.zero.charCodeAt(0);
             
         // between '0' to '9'
         if (48 <= code && code < 58) {
@@ -904,18 +926,18 @@
         Top Level Functions
     ************************************/
 
-    numeral = function (input, rm) {
-        this._rm = rm || Big['RM'];
-        this._locale = currentLocale;
+    numeral = function (input, pattern, rm, locale, strict) {
+        locale = locale || numeral.fn._locale.abbr;
+        pattern = pattern || numeral.fn._pattern.key;
 
-        if (!currentPattern) {
-            currentPattern = locales[currentLocale].patterns.decimal;
-            parsePattern(currentPattern);
-        }
+        this._locale = getLocaleDefinition(locale);
+        this._pattern = getPatternDefiniton(pattern);
+        this._rm = rm || Big['RM'];
+
 
         if (numeral.isNumeral(input)) {
             input = input.value();
-        } else if (input === 0 || typeof input === 'undefined') {
+        } else if (input === 0 || input === undefined) {
             input = 0;
         } else if (!Number(input)) {
             input = numeral.fn.unformat(input);
@@ -924,113 +946,81 @@
         return new Numeral(Number(input));
     };
 
-    // version number
+    // Version number
     numeral.version = VERSION;
 
-    // compare numeral object
+    // Compare numeral object
     numeral.isNumeral = function (obj) {
         return obj instanceof Numeral;
     };
 
-    // custom zero format
-    numeral.zeroFormat = function(format) {
-        zeroFormat = typeof(format) === 'string' ? format : null;
-    };
-
-    // custom zero format
+    // Set rounding mode
     numeral.roundingMode = numeral.rm = function(rm) {
         return setRoundingMode(rm);
     };
 
-    // Set current format
-    numeral.setFormat = function(pattern) {
-        parsePattern(pattern);
-        currentPattern = pattern;
+    // Set current pattern
+    numeral.pattern = function(key) {
+        numeral.fn._pattern = getPatternDefiniton(key);
+    };
+
+    // Set custom zero format
+    numeral.zeroFormat = function(format) {
+        zeroFormat = typeof(format) === 'string' ? format : null;
     };
 
     // This function will load locales and then set the global locale.  If
     // no arguments are passed in, it will simply return the current global
     // locale key.
     numeral.locale = function (key, values) {
+        var r;
         if (!key) {
-            return currentLocale;
+            return numeral.fn._locale.abbr;
         }
-
-        if (key && !values) {
-            if(!locales[key]) {
-                throw new Error('Unknown locale : ' + key);
-            }
-            currentLocale = key;
+        if (values) {
+            loadLocale(normalizeLocale(key), values);
+        } else if (values === null) {
+            unloadLocale(key);
+            key = 'en';
+        } else if (!locales[key]) {
+            getLocaleDefinition(key);
         }
-
-        if (values || !locales[key]) {
-            loadLocale(key, values);
-        }
-
-        return numeral;
+        r = numeral.fn._locale = getLocaleDefinition(key);
+        return r.abbr;
     };
-    
-    // This function provides access to the loaded locale data.  If
-    // no arguments are passed in, it will simply return the current
-    // global locale object.
+
+    // returns locale data
     numeral.localeData = function (key) {
-        if (!key) {
-            return locales[currentLocale];
+        if (key && key._locale && key._locale.abbr) {
+            key = key._locale.abbr;
         }
-        
-        if (!locales[key]) {
-            throw new Error('Unknown locale : ' + key);
-        }
-        
-        return locales[key];
+        return getLocaleDefinition(key);
     };
-
-    numeral.locale('en', {
-        symbols: {
-            decimal:        '.',
-            group:          ',',
-            list:           ';',
-            zero:           '0',
-            percent:        '%',
-            plusSign:       '+',
-            minusSign:      '-',
-            exponential:    'E',
-            permille:       '\u2030',
-            infinity:       '\u221E',
-            nan:            'NaN'
-        },
-        patterns: {
-            decimal:    '#,##0.###',
-            scientific: '#E0',
-            percent:    '#,##0%',
-            currency:   '¤#,##0.00',
-            accounting: '¤#,##0.00;(¤#,##0.00)'
-        },
-        abbreviations: {
-            thousand:   'k',
-            million:    'm',
-            billion:    'b',
-            trillion:   't'
-        },
-        currency: {
-            local: 'USD',
-            symbols: { AUD: 'A$', BRL: 'R$', CAD: 'CA$', CNY: 'CN\u00A5', EUR: '\u20AC', GBP: '\u00A3', HKD: 'HK$', ILS: '\u20AA', INR: '\u20B9', JPY: '\u00A5', KRW: '\u20A9', MXN: 'MX$', NZD: 'NZ$', THB: '\u0E3F', TWD: 'NT$', USD: '$', VND: '\u20AB', XAF: 'FCFA', XCD: 'EC$', XOF: 'CFA', XPF: 'CFPF' }
-        },
-        ordinal: function (number) {
-            var b = number % 10;
-            return (~~ (number % 100 / 10) === 1) ? 'th' :
-                (b === 1) ? 'st' :
-                (b === 2) ? 'nd' :
-                (b === 3) ? 'rd' : 'th';
-        }
-    });
 
     /************************************
         Helpers
     ************************************/
 
-    function loadLocale (key, values) {
-        locales[key] = values;
+    function extend(a, b) {
+        for (var i in b) {
+            if (b.hasOwnProperty(i)) {
+                a[i] = b[i];
+            }
+        }
+
+        if (b.hasOwnProperty('toString')) {
+            a.toString = b.toString;
+        }
+
+        if (b.hasOwnProperty('valueOf')) {
+            a.valueOf = b.valueOf;
+        }
+
+        return a;
+    }
+
+    function isArray(input) {
+        return Object.prototype.toString.call(input) === '[object Array]';
     }
 
     function inArray (array, value) {
@@ -1038,6 +1028,36 @@
             if (array[i] === value) { return true; }
         }
         return false;
+    }
+
+    // compare two arrays, return the number of differences
+    function compareArrays(array1, array2, dontConvert) {
+        var len = Math.min(array1.length, array2.length),
+            lengthDiff = Math.abs(array1.length - array2.length),
+            diffs = 0,
+            i;
+        for (i = 0; i < len; i++) {
+            if ((dontConvert && array1[i] !== array2[i]) ||
+                (!dontConvert && toInt(array1[i]) !== toInt(array2[i]))) {
+                diffs++;
+            }
+        }
+        return diffs + lengthDiff;
+    }
+
+    function toInt(argumentForCoercion) {
+        var coercedNumber = +argumentForCoercion,
+            value = 0;
+
+        if (coercedNumber !== 0 && isFinite(coercedNumber)) {
+            if (coercedNumber >= 0) {
+                value = Math.floor(coercedNumber);
+            } else {
+                value = Math.ceil(coercedNumber);
+            }
+        }
+
+        return value;
     }
 
     function setRoundingMode (rm) {
@@ -1058,48 +1078,115 @@
 
     // Helper function to prepare the environment (pattern and locale) 
     // before running a function
-    function prepareEnv (num, pattern, options, cb) {
-        var prevPattern = '' + currentPattern,
-            prevLocale = '' + currentLocale,
-            prevRm = Big['RM'],
+    function prepareEnv (num, pattern, config, cb) {
+        var prevRm = Big['RM'],
             rm,
-            locale,
             result;
 
-        pattern = pattern || (( num._currentPattern || currentPattern ) || 'decimal');
-        options = options || {};
+        // Setup basic configuration
+        config = config || {};
+        config.locale = num._locale;
+        config.currency = config.currency || num._locale.currency.local;
+        
+        // Get pattern definition
+        pattern = pattern || num._pattern.key;
+        pattern = num._locale.patterns[pattern] ? num._locale.patterns[pattern] : pattern;
+        config.pattern = getPatternDefiniton(pattern);
 
         // Set rounding mode
-        rm = options.rm || num._rm;
+        rm = config.rm || num._rm;
         setRoundingMode(rm);
 
-        // Set current locale
-        locale = options.locale || num._locale;
-        numeral.locale(locale);
-
-        // Look up pattern from locale
-        if (pattern in locales[currentLocale].patterns) {
-            pattern = locales[currentLocale].patterns[pattern];
-        }
-
-        // Parse pattern and format
-        parsePattern(pattern);
-        currentPattern = pattern;
-
-        result = cb(options);
+        // Run callback
+        result = cb(config);
 
         // Restore previous settings
-        if (prevPattern) {
-            currentPattern = prevPattern;
-        }
         setRoundingMode(prevRm);
-        numeral.locale(prevLocale);
 
-        if (options.set) {
+        if (config.set) {
             num.set( result );
         }
 
         return result;
+    }
+
+    function normalizeLocale(key) {
+        return key ? key.toLowerCase().replace('_', '-') : key;
+    }
+
+
+    /************************************
+        Locales
+    ************************************/
+
+    // Loads a locale definition into the `locales` cache.  The function
+    // takes a key and optionally values.  If not in the browser and no values
+    // are provided, it will load the locale file module.  As a convenience,
+    // this function also returns the locale values.
+    function loadLocale(key, values) {
+        values.abbr = key;
+        locales[key] = values;
+        return locales[key];
+    }
+
+    // Remove a locale from the `locales` cache. Mostly useful in tests.
+    function unloadLocale(key) {
+        delete locales[key];
+    }
+
+    // Determines which locale data to use and returns it.
+    //
+    // With no parameters, it will return the global locale.  If you
+    // pass in a locale key, such as 'en', it will return the
+    // definition for 'en', so long as 'en' has already been loaded using
+    // numeral.locale.
+    function getLocaleDefinition(key) {
+        var i = 0, j, locale, next, split,
+            get = function (k) {
+                if (!locales[k] && hasModule) {
+                    try {
+                        require('./locales/' + k);
+                    } catch (e) { }
+                }
+                return locales[k];
+            };
+
+        if (!key) {
+            return numeral.fn._locale;
+        }
+
+        if (!isArray(key)) {
+            //short-circuit everything else
+            locale = get(key);
+            if (locale) {
+                return locale;
+            }
+            key = [key];
+        }
+
+        // pick the locale from the array
+        // try ['en-au', 'en-gb'] as 'en-au', 'en-gb', 'en', as in move through the list trying each
+        // substring from most specific to least, but move to the next array item if it's a more
+        // specific variant than the current root
+        while (i < key.length) {
+            split = normalizeLocale(key[i]).split('-');
+            j = split.length;
+            next = normalizeLocale(key[i + 1]);
+            next = next ? next.split('-') : null;
+            while (j > 0) {
+                locale = get(split.slice(0, j).join('-'));
+                if (locale) {
+                    return locale;
+                }
+                if (next && next.length >= j && compareArrays(split, next, true) >= j - 1) {
+                    //the next array item is better than a shallower substring of this one
+                    break;
+                }
+                j--;
+            }
+            i++;
+        }
+        return numeral.fn._locale;
     }
 
 
@@ -1114,23 +1201,17 @@
             return numeral(this);
         },
 
-        locale : function(locale) {
-            this._locale = locale;
-            return this;
-        },
-
         format : function (pattern, options) {
             var self = this;
-            return prepareEnv(this, pattern, options, function (options) {
-                return format(self.value(), options);
+            // See peab liikuma kutsuvasse funktsiooni //            
+            return prepareEnv(this, pattern, options, function (config) {
+                return format(self.value(), config);
             });
         },
 
         unformat : function (input, options) {
-            options = options || {};
-            options.currency = options.currency || locales[currentLocale].currency.local;
-            return prepareEnv(this, null, options, function (options) {
-                return unformat(input, options);
+            return prepareEnv(this, null, options, function (config) {
+                return unformat(input, config);
             });
         },
 
@@ -1139,7 +1220,7 @@
         },
 
         currency: function (currency, options) {
-            currency = currency || locales[currentLocale].currency.local;
+            currency = currency || this._locale.currency.local;
             options = options || {};
 
             if (!inArray( currencies, currency )) {
@@ -1175,9 +1256,13 @@
             return formatTime( this.value() );
         },
 
-        setFormat: function(pattern) {
-            this._currentPattern = pattern;
-            return this;
+        pattern: function(key) {
+            if (key === undefined) {
+                return this._pattern;
+            } else {
+                this._pattern = getPatternDefiniton(key);
+                return this;
+            }
         },
 
         zeroFormat: function(format) {
@@ -1188,6 +1273,18 @@
         set : function (value) {
             this._value = new Big(value);
             return this;
+        },
+
+        // If passed a locale key, it will set the locale for this
+        // instance.  Otherwise, it will return the locale configuration
+        // variables for this instance.
+        locale : function (key) {
+            if (key === undefined) {
+                return this._locale;
+            } else {
+                this._locale = getLocaleDefinition(key);
+                return this;
+            }
         }
 
     };
@@ -1288,6 +1385,56 @@
     };
 
     /************************************
+        Default Locale & pattern
+    ************************************/
+
+    // Set default locale
+    numeral.locale('en', {
+        symbols: {
+            decimal:        '.',
+            group:          ',',
+            list:           ';',
+            zero:           '0',
+            percent:        '%',
+            plusSign:       '+',
+            minusSign:      '-',
+            exponential:    'E',
+            permille:       '\u2030',
+            infinity:       '\u221E',
+            nan:            'NaN'
+        },
+
+        patterns: {
+            decimal:    '#,##0.###',
+            scientific: '#E0',
+            percent:    '#,##0%',
+            currency:   '¤#,##0.00',
+            accounting: '¤#,##0.00;(¤#,##0.00)'
+        },
+
+        abbreviations: {
+            thousand:   'k',
+            million:    'm',
+            billion:    'b',
+            trillion:   't'
+        },
+
+        currency: {
+            local: 'USD',
+            symbols: { AUD: 'A$', BRL: 'R$', CAD: 'CA$', CNY: 'CN\u00A5', EUR: '\u20AC', GBP: '\u00A3', HKD: 'HK$', ILS: '\u20AA', INR: '\u20B9', JPY: '\u00A5', KRW: '\u20A9', MXN: 'MX$', NZD: 'NZ$', THB: '\u0E3F', TWD: 'NT$', USD: '$', VND: '\u20AB', XAF: 'FCFA', XCD: 'EC$', XOF: 'CFA', XPF: 'CFPF' }
+        },
+
+        ordinal: function (number) {
+            var b = number % 10;
+            return (~~ (number % 100 / 10) === 1) ? 'th' :
+                (b === 1) ? 'st' :
+                (b === 2) ? 'nd' :
+                (b === 3) ? 'rd' : 'th';
+        }
+    });
+    numeral.pattern(locales['en'].patterns.decimal);
+
+    /************************************
         Exposing Numeral
     ************************************/
 
@@ -1301,7 +1448,7 @@
         // here, `this` means `window` in the browser, or `global` on the server
         // add `numeral` as a global object via a string identifier,
         // for Closure Compiler 'advanced' mode
-        root.numeral = numeral;
+        global.numeral = numeral;
     }
 
     /*global define:false */

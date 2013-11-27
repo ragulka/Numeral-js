@@ -61,7 +61,10 @@ module.exports = function(grunt) {
                 'sub': true,
                 'strict': false,
                 'trailing': true,
-                'quotmark': 'single'
+                'quotmark': 'single',
+                'globals': {
+                    'define': false
+                }
             }
         }
     });

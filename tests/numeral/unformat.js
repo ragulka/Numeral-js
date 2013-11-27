@@ -31,7 +31,7 @@ exports.unformat = {
         for (var i = 0; i < tests.length; i++) {
             test.strictEqual(numeral().unformat(tests[i][0]), tests[i][1], tests[i][0]);
         }
-        test.strictEqual( numeral().setFormat('#,##0.00;(#,##0.00)').unformat('(0.12345)'), -0.12345 );
+        test.strictEqual( numeral().pattern('#,##0.00;(#,##0.00)').unformat('(0.12345)'), -0.12345 );
 
         test.done();
     },
@@ -40,7 +40,7 @@ exports.unformat = {
         test.expect(2);
 
         test.strictEqual( numeral().unformat('$ 10,000.00'), 10000 );
-        test.strictEqual( numeral().setFormat('¤#,##0.00;(¤#,##0.00)').unformat('($1.23m)'), -1230000 );
+        test.strictEqual( numeral().pattern('¤#,##0.00;(¤#,##0.00)').unformat('($1.23m)'), -1230000 );
 
         test.done();
     },

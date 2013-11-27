@@ -1,8 +1,4 @@
-var numeral = require('../../numeral'),
-    et = require('../../locales/et');
-
-// Load in estonian locale for testing local locale
-numeral.locale('et', et).locale('en');
+var numeral = require('../../numeral');
 
 exports.misc = {
 
@@ -97,6 +93,9 @@ exports.misc = {
 
     locale: function(test) {
         test.expect(3);
+
+        numeral.locale('et'); // Load estonian locale
+        numeral.locale('en'); // Set global back to en
 
         var num1 = numeral(10000.23).locale('et'),
             num2 = numeral(10000.23);

@@ -956,12 +956,22 @@
 
     // Set rounding mode
     numeral.roundingMode = numeral.rm = function(rm) {
-        return setRoundingMode(rm);
+        if (rm === undefined) {
+            return numeral.fn._rm;
+        } else {
+            numeral.fn._rm = rm;
+            return this;
+        }
     };
 
     // Set current pattern
     numeral.pattern = function(key) {
-        numeral.fn._pattern = getPatternDefiniton(key);
+        if (key === undefined) {
+            return numeral.fn._pattern;
+        } else {
+            numeral.fn._pattern = getPatternDefiniton(key);
+            return this;
+        }
     };
 
     // Set custom zero format

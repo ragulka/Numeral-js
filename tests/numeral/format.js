@@ -166,7 +166,7 @@ exports.format = {
         // Set rounding mode back to 1
         numeral.rm(1);
       
-      test.done();
+        test.done();
       
     },
 
